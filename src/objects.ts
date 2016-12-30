@@ -12,7 +12,7 @@ function shallow_clone(document) {
 export class PUT extends BaseOperation {
     public _type = ['objects', 'PUT'];
     public rebase_functions = [
-        ['PUT', (_other, conflictless) => {
+        ['PUT', function (_other, conflictless) {
             if (_other instanceof PUT) {
                 let other = _other as PUT;
                 if (this.key === other.key) {
@@ -34,7 +34,7 @@ export class PUT extends BaseOperation {
                     return [this, other];
                 }
             }
-            return null;
+            return [this, _other];
         }]
     ];
 
@@ -105,7 +105,7 @@ export class REM extends BaseOperation {
 
     public _type = ['objects', 'REM'];
     public rebase_functions = [
-        ['REM', (_other, conflictless) => {
+        ['REM', function (_other, conflictless) {
             if (_other instanceof REM) {
                 let other = _other as REM;
                 if (this.key === other.key) {
@@ -115,7 +115,7 @@ export class REM extends BaseOperation {
             return [this, _other];
         }],
 
-        ['REN', (_other, conflictless) => {
+        ['REN', function (_other, conflictless) {
             if (_other instanceof REN) {
                 let other = _other as REN;
                 if (this.key === other.old_key) {
@@ -128,7 +128,7 @@ export class REM extends BaseOperation {
             return [this, _other];
         }],
 
-        ['APPLY', (_other, conflictless) => {
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 if (this.key === other.key) {
@@ -192,7 +192,7 @@ export class REN extends BaseOperation {
 
     public _type = ['objects', 'REN'];
     public rebase_functions = [
-        ['REN', (_other, conflictless) => {
+        ['REN', function (_other, conflictless) {
             if (_other instanceof REN) {
                 let other = _other as REN;
                 if (this.old_key === other.old_key) {
@@ -225,7 +225,7 @@ export class REN extends BaseOperation {
             return [this, _other];
         }],
 
-        ['APPLY', (_other, conflictless) => {
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 if (this.old_key === other.key) {
@@ -294,7 +294,7 @@ export class APPLY extends BaseOperation {
 
     public _type = ['objects', 'APPLY'];
     public rebase_functions = [
-        ['APPLY', (_other, conflictless) => {
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 if (this.key !== other.key) {
@@ -315,6 +315,8 @@ export class APPLY extends BaseOperation {
                     ];
                 }
             }
+
+            return [this, _other];
         }]
     ];
 

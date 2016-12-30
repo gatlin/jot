@@ -16,30 +16,29 @@ function shallow_clone(document) {
 var PUT = (function (_super) {
     __extends(PUT, _super);
     function PUT(key, value) {
-        var _this = this;
         _super.call(this);
         this._type = ['objects', 'PUT'];
         this.rebase_functions = [
             ['PUT', function (_other, conflictless) {
                     if (_other instanceof PUT) {
                         var other = _other;
-                        if (_this.key === other.key) {
-                            if (deepEqual(_this.value, other.value)) {
+                        if (this.key === other.key) {
+                            if (deepEqual(this.value, other.value)) {
                                 return [new base_1.NO_OP(), new base_1.NO_OP()];
                             }
-                            if (conflictless && base_1.cmp(_this.value, other.value) < 0) {
+                            if (conflictless && base_1.cmp(this.value, other.value) < 0) {
                                 return [
                                     new base_1.NO_OP(),
-                                    new APPLY(other.key, new base_1.SET(_this.value, other.value))
+                                    new APPLY(other.key, new base_1.SET(this.value, other.value))
                                 ];
                             }
                             return null;
                         }
                         else {
-                            return [_this, other];
+                            return [this, other];
                         }
                     }
-                    return null;
+                    return [this, _other];
                 }]
         ];
         this.key = key;
@@ -91,7 +90,6 @@ exports.PUT = PUT;
 var REM = (function (_super) {
     __extends(REM, _super);
     function REM(key, old_value) {
-        var _this = this;
         if (old_value === void 0) { old_value = undefined; }
         _super.call(this);
         this._type = ['objects', 'REM'];
@@ -99,35 +97,35 @@ var REM = (function (_super) {
             ['REM', function (_other, conflictless) {
                     if (_other instanceof REM) {
                         var other = _other;
-                        if (_this.key === other.key) {
+                        if (this.key === other.key) {
                             return [new base_1.NO_OP(), new base_1.NO_OP()];
                         }
                     }
-                    return [_this, _other];
+                    return [this, _other];
                 }],
             ['REN', function (_other, conflictless) {
                     if (_other instanceof REN) {
                         var other = _other;
-                        if (_this.key === other.old_key) {
+                        if (this.key === other.old_key) {
                             return [
-                                new REM(other.new_key, _this.old_value),
+                                new REM(other.new_key, this.old_value),
                                 new base_1.NO_OP()
                             ];
                         }
                     }
-                    return [_this, _other];
+                    return [this, _other];
                 }],
             ['APPLY', function (_other, conflictless) {
                     if (_other instanceof APPLY) {
                         var other = _other;
-                        if (_this.key === other.key) {
+                        if (this.key === other.key) {
                             return [
-                                new REM(_this.key, other.op.apply(_this.old_value)),
+                                new REM(this.key, other.op.apply(this.old_value)),
                                 new base_1.NO_OP()
                             ];
                         }
                     }
-                    return [_this, _other];
+                    return [this, _other];
                 }]
         ];
         this.key = key;
@@ -167,27 +165,26 @@ exports.REM = REM;
 var REN = (function (_super) {
     __extends(REN, _super);
     function REN(old_key, new_key) {
-        var _this = this;
         _super.call(this);
         this._type = ['objects', 'REN'];
         this.rebase_functions = [
             ['REN', function (_other, conflictless) {
                     if (_other instanceof REN) {
                         var other = _other;
-                        if (_this.old_key === other.old_key) {
-                            if (_this.new_key === other.new_key) {
+                        if (this.old_key === other.old_key) {
+                            if (this.new_key === other.new_key) {
                                 return [new base_1.NO_OP(), new base_1.NO_OP()];
                             }
-                            if (conflictless && base_1.cmp(_this.new_key, other.new_key) < 0) {
+                            if (conflictless && base_1.cmp(this.new_key, other.new_key) < 0) {
                                 return [
                                     new base_1.NO_OP(),
-                                    new REN(_this.new_key, other.new_key)
+                                    new REN(this.new_key, other.new_key)
                                 ];
                             }
                             return null;
                         }
-                        if (_this.new_key === other.new_key) {
-                            if (conflictless && base_1.cmp(_this.old_key, other.old_key) < 0) {
+                        if (this.new_key === other.new_key) {
+                            if (conflictless && base_1.cmp(this.old_key, other.old_key) < 0) {
                                 return [
                                     new base_1.NO_OP(),
                                     other
@@ -196,19 +193,19 @@ var REN = (function (_super) {
                             return null;
                         }
                     }
-                    return [_this, _other];
+                    return [this, _other];
                 }],
             ['APPLY', function (_other, conflictless) {
                     if (_other instanceof APPLY) {
                         var other = _other;
-                        if (_this.old_key === other.key) {
+                        if (this.old_key === other.key) {
                             return [
-                                _this,
-                                new APPLY(_this.new_key, other.op)
+                                this,
+                                new APPLY(this.new_key, other.op)
                             ];
                         }
                     }
-                    return [_this, _other];
+                    return [this, _other];
                 }]
         ];
         if (old_key === null || new_key === null) {
@@ -253,29 +250,29 @@ exports.REN = REN;
 var APPLY = (function (_super) {
     __extends(APPLY, _super);
     function APPLY(key, op) {
-        var _this = this;
         _super.call(this);
         this._type = ['objects', 'APPLY'];
         this.rebase_functions = [
             ['APPLY', function (_other, conflictless) {
                     if (_other instanceof APPLY) {
                         var other = _other;
-                        if (_this.key !== other.key) {
-                            return [_this, other];
+                        if (this.key !== other.key) {
+                            return [this, other];
                         }
-                        var opa = _this.op.rebase(other.op, conflictless);
-                        var opb = other.op.rebase(_this.op, conflictless);
+                        var opa = this.op.rebase(other.op, conflictless);
+                        var opb = other.op.rebase(this.op, conflictless);
                         if (opa && opb) {
                             return [
                                 (opa instanceof base_1.NO_OP)
                                     ? new base_1.NO_OP()
-                                    : new APPLY(_this.key, opa),
+                                    : new APPLY(this.key, opa),
                                 (opb instanceof base_1.NO_OP)
                                     ? new base_1.NO_OP()
                                     : new APPLY(other.key, opb)
                             ];
                         }
                     }
+                    return [this, _other];
                 }]
         ];
         if (key === null || op === null) {

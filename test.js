@@ -1,4 +1,7 @@
 let jot = require('./jot');
+let objs = require('./jot/objects');
+let values = require('./jot/values');
+let deepEqual = require('deep-equal');
 
 let doc = {
     key1: 'Hello World!',
@@ -23,3 +26,10 @@ console.log('applying user2', user2.apply(doc));
 let user2_rebased = user2.rebase(user1);
 
 console.log('applying combo', user1.compose(user2_rebased).apply(doc));
+
+let o1 = new objs.PUT('key', 'value2').rebase(
+    new objs.PUT('key', 'value1'), true);
+
+let o2 = new objs.APPLY('key', new values.SET('value1', 'value2'));
+
+console.log(deepEqual(o1, o2));

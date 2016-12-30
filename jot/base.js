@@ -132,9 +132,6 @@ var BaseOperation = (function () {
     return BaseOperation;
 }());
 exports.BaseOperation = BaseOperation;
-function isSET(thing) {
-    return thing instanceof SET;
-}
 var NO_OP = (function (_super) {
     __extends(NO_OP, _super);
     function NO_OP() {

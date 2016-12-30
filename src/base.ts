@@ -165,11 +165,6 @@ export abstract class BaseOperation {
 
 }
 
-
-function isSET(thing: BaseOperation): thing is SET {
-    return <SET>thing instanceof SET;
-}
-
 export class NO_OP extends BaseOperation {
 
     public rebase_functions = [];
