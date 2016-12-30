@@ -18,7 +18,7 @@ var PUT = (function (_super) {
     function PUT(key, value) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'PUT';
+        this._type = ['objects', 'PUT'];
         this.rebase_functions = [
             ['PUT', function (_other, conflictless) {
                     if (_other instanceof PUT) {
@@ -94,7 +94,7 @@ var REM = (function (_super) {
         var _this = this;
         if (old_value === void 0) { old_value = undefined; }
         _super.call(this);
-        this.op_name = 'REM';
+        this._type = ['objects', 'REM'];
         this.rebase_functions = [
             ['REM', function (_other, conflictless) {
                     if (_other instanceof REM) {
@@ -169,7 +169,7 @@ var REN = (function (_super) {
     function REN(old_key, new_key) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'REN';
+        this._type = ['objects', 'REN'];
         this.rebase_functions = [
             ['REN', function (_other, conflictless) {
                     if (_other instanceof REN) {
@@ -255,7 +255,7 @@ var APPLY = (function (_super) {
     function APPLY(key, op) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'APPLY';
+        this._type = ['objects', 'APPLY'];
         this.rebase_functions = [
             ['APPLY', function (_other, conflictless) {
                     if (_other instanceof APPLY) {

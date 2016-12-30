@@ -11,7 +11,7 @@ var SPLICE = (function (_super) {
     function SPLICE(pos, old_value, new_value) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'SPLICE';
+        this._type = ['sequences', 'SPLICE'];
         this.rebase_functions = [
             ['SPLICE', function (_other, conflictless) {
                     if (_other instanceof SPLICE) {
@@ -227,7 +227,7 @@ var MOVE = (function (_super) {
     function MOVE(pos, count, new_pos) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'MOVE';
+        this._type = ['sequences', 'MOVE'];
         this.rebase_functions = [
             ['MOVE', function (_other, conflictless) {
                     if (_other instanceof MOVE) {
@@ -320,7 +320,7 @@ var APPLY = (function (_super) {
     function APPLY(pos, op) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'APPLY';
+        this._type = ['sequences', 'APPLY'];
         this.rebase_functions = [
             ['APPLY', function (_other, conflictless) {
                     if (_other instanceof APPLY) {
@@ -419,7 +419,7 @@ var MAP = (function (_super) {
     function MAP(op) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'MAP';
+        this._type = ['sequences', 'MAP'];
         this.rebase_functions = [
             ['MAP', function (_other, conflictless) {
                     if (_other instanceof MAP) {

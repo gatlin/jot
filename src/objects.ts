@@ -10,7 +10,7 @@ function shallow_clone(document) {
 }
 
 export class PUT extends BaseOperation {
-    public op_name = 'PUT';
+    public _type = ['objects', 'PUT'];
     public rebase_functions = [
         ['PUT', (_other, conflictless) => {
             if (_other instanceof PUT) {
@@ -103,7 +103,7 @@ export class REM extends BaseOperation {
     public key: any;
     public old_value: any;
 
-    public op_name = 'REM';
+    public _type = ['objects', 'REM'];
     public rebase_functions = [
         ['REM', (_other, conflictless) => {
             if (_other instanceof REM) {
@@ -190,7 +190,7 @@ export class REN extends BaseOperation {
     public old_key: any;
     public new_key: any;
 
-    public op_name = 'REN';
+    public _type = ['objects', 'REN'];
     public rebase_functions = [
         ['REN', (_other, conflictless) => {
             if (_other instanceof REN) {
@@ -292,7 +292,7 @@ export class APPLY extends BaseOperation {
     public key: any;
     public op: BaseOperation;
 
-    public op_name = 'APPLY';
+    public _type = ['objects', 'APPLY'];
     public rebase_functions = [
         ['APPLY', (_other, conflictless) => {
             if (_other instanceof APPLY) {

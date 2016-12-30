@@ -58,7 +58,7 @@ export abstract class BaseOperation {
 
     public type: Array<any>; // kludge
     public abstract rebase_functions: Array<RebaseFunction>;
-    public abstract op_name: string;
+    public abstract _type: Array<string>;
 
     public inspect(depth) {
         let repr = [];
@@ -78,14 +78,14 @@ export abstract class BaseOperation {
         }
 
         return util.format('<%s.%s {%s}>',
-            this.type[0],
-            this.type[1],
+            this._type[0],
+            this._type[1],
             repr.join(', '));
     }
 
     public toJsonableObject() {
         const repr = {};
-        repr['_type'] = { 'module': this.type[0], 'class': this.type[1] };
+        repr['_type'] = { 'module': this._type[0], 'class': this._type[1] };
         const keys = Object.keys(this);
         for (let i = 0; i < keys.length; i++) {
             let v;
@@ -112,19 +112,20 @@ export abstract class BaseOperation {
         return JSON.stringify(this.toJsonableObject());
     }
 
-    public rebase(_other: BaseOperation, conflictless: boolean = false): BaseOperation {
-        if (this.op_name === 'NO_OP') {
+    public rebase(_other: BaseOperation, conflictless: boolean = false):
+        BaseOperation {
+        if (this._type[1] === 'NO_OP') {
             return this;
         }
 
-        if (_other.op_name === 'NO_OP') {
+        if (_other._type[1] === 'NO_OP') {
             return this;
         }
 
         for (let i = 0; i < ((this.rebase_functions !== null)
             ? this.rebase_functions.length
             : 0); i++) {
-            if (_other.op_name === this.rebase_functions[i][0]) {
+            if (_other._type[1] === this.rebase_functions[i][0]) {
                 let r = this.rebase_functions[i][1].call(
                     this,
                     _other,
@@ -138,7 +139,7 @@ export abstract class BaseOperation {
         for (let i = 0; i < ((_other.rebase_functions !== null)
             ? _other.rebase_functions.length
             : 0); i++) {
-            if (this.op_name === _other.rebase_functions[i][0]) {
+            if (this._type[1] === _other.rebase_functions[i][0]) {
                 let r = _other.rebase_functions[i][1].call(
                     _other,
                     this,
@@ -168,7 +169,7 @@ function isSET(thing: BaseOperation): thing is SET {
 export class NO_OP extends BaseOperation {
 
     public rebase_functions = [];
-    public op_name = 'NO_OP';
+    public _type = ['values', 'NO_OP'];
 
     constructor() {
         super();
@@ -195,8 +196,7 @@ export class NO_OP extends BaseOperation {
 
 export class SET extends BaseOperation {
 
-    public op_name = 'SET';
-
+    public _type = ['values', 'SET'];
     public rebase_functions = [
         ['SET', (_other, conflictless) => {
             let other = _other as SET;
@@ -265,8 +265,7 @@ export class SET extends BaseOperation {
 }
 
 export class MATH extends BaseOperation {
-
-    public op_name = 'MATH';
+    public _type = ['values', 'MATH'];
 
     public rebase_functions = [
         ['MATH', (_other, conflictless) => {
@@ -458,8 +457,7 @@ function rebase_array(base, ops) {
 }
 
 export class LIST extends BaseOperation {
-
-    public op_name = 'LIST';
+    public _type = ['meta', 'LIST'];
     public ops: Array<BaseOperation>;
     public rebase_functions = [];
 

@@ -23,3 +23,15 @@ export {
     REM,
     APPLY as OBJECT_APPLY
 } from './objects';
+
+import { BaseOperation } from './base';
+
+export function opFromJsonableObject(obj, op_map) {
+    if (!('_type' in obj)) {
+        throw 'Invalid argument: not an operation';
+    }
+
+    /** TODO
+        FINISH ME
+     */
+}

@@ -68,11 +68,11 @@ var BaseOperation = (function () {
             }
             repr.push(keys[i] + ':' + v);
         }
-        return util.format('<%s.%s {%s}>', this.type[0], this.type[1], repr.join(', '));
+        return util.format('<%s.%s {%s}>', this._type[0], this._type[1], repr.join(', '));
     };
     BaseOperation.prototype.toJsonableObject = function () {
         var repr = {};
-        repr['_type'] = { 'module': this.type[0], 'class': this.type[1] };
+        repr['_type'] = { 'module': this._type[0], 'class': this._type[1] };
         var keys = Object.keys(this);
         for (var i = 0; i < keys.length; i++) {
             var v = void 0;
@@ -97,16 +97,16 @@ var BaseOperation = (function () {
     };
     BaseOperation.prototype.rebase = function (_other, conflictless) {
         if (conflictless === void 0) { conflictless = false; }
-        if (this.op_name === 'NO_OP') {
+        if (this._type[1] === 'NO_OP') {
             return this;
         }
-        if (_other.op_name === 'NO_OP') {
+        if (_other._type[1] === 'NO_OP') {
             return this;
         }
         for (var i = 0; i < ((this.rebase_functions !== null)
             ? this.rebase_functions.length
             : 0); i++) {
-            if (_other.op_name === this.rebase_functions[i][0]) {
+            if (_other._type[1] === this.rebase_functions[i][0]) {
                 var r = this.rebase_functions[i][1].call(this, _other, conflictless);
                 if (r !== null && r[0] !== null) {
                     return r[0];
@@ -116,7 +116,7 @@ var BaseOperation = (function () {
         for (var i = 0; i < ((_other.rebase_functions !== null)
             ? _other.rebase_functions.length
             : 0); i++) {
-            if (this.op_name === _other.rebase_functions[i][0]) {
+            if (this._type[1] === _other.rebase_functions[i][0]) {
                 var r = _other.rebase_functions[i][1].call(_other, this, conflictless);
                 if (r !== null && r[1] !== null) {
                     return r[1];
@@ -136,7 +136,7 @@ var NO_OP = (function (_super) {
     function NO_OP() {
         _super.call(this);
         this.rebase_functions = [];
-        this.op_name = 'NO_OP';
+        this._type = ['values', 'NO_OP'];
         Object.freeze(this);
     }
     NO_OP.prototype.apply = function (document) {
@@ -160,7 +160,7 @@ var SET = (function (_super) {
         var _this = this;
         if (new_value === void 0) { new_value = undefined; }
         _super.call(this);
-        this.op_name = 'SET';
+        this._type = ['values', 'SET'];
         this.rebase_functions = [
             ['SET', function (_other, conflictless) {
                     var other = _other;
@@ -218,7 +218,7 @@ var MATH = (function (_super) {
     function MATH(operator, operand) {
         var _this = this;
         _super.call(this);
-        this.op_name = 'MATH';
+        this._type = ['values', 'MATH'];
         this.rebase_functions = [
             ['MATH', function (_other, conflictless) {
                     var other = _other;
@@ -372,7 +372,7 @@ var LIST = (function (_super) {
     __extends(LIST, _super);
     function LIST(ops) {
         _super.call(this);
-        this.op_name = 'LIST';
+        this._type = ['meta', 'LIST'];
         this.rebase_functions = [];
         if (ops === null) {
             throw 'Invalid argument';

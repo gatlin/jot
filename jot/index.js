@@ -18,3 +18,12 @@ exports.PUT = objects_1.PUT;
 exports.REN = objects_1.REN;
 exports.REM = objects_1.REM;
 exports.OBJECT_APPLY = objects_1.APPLY;
+function opFromJsonableObject(obj, op_map) {
+    if (!('_type' in obj)) {
+        throw 'Invalid argument: not an operation';
+    }
+    /** TODO
+        FINISH ME
+     */
+}
+exports.opFromJsonableObject = opFromJsonableObject;
