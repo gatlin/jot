@@ -1,7 +1,7 @@
 {
     "version": "2.0",
     "compilerOptions": {
-        "outDir": "build"
+        "outDir": "jot"
     },
     "exclude": [
         "node_modules"

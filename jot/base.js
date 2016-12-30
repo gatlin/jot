@@ -97,10 +97,10 @@ var BaseOperation = (function () {
     };
     BaseOperation.prototype.rebase = function (_other, conflictless) {
         if (conflictless === void 0) { conflictless = false; }
-        if (this.rebase_functions.length === 0) {
+        if (this.op_name === 'NO_OP') {
             return this;
         }
-        if (_other.rebase_functions.length === 0) {
+        if (_other.op_name === 'NO_OP') {
             return this;
         }
         for (var i = 0; i < ((this.rebase_functions !== null)
@@ -158,6 +158,7 @@ var SET = (function (_super) {
     __extends(SET, _super);
     function SET(old_value, new_value) {
         var _this = this;
+        if (new_value === void 0) { new_value = undefined; }
         _super.call(this);
         this.op_name = 'SET';
         this.rebase_functions = [
@@ -218,7 +219,6 @@ var MATH = (function (_super) {
         var _this = this;
         _super.call(this);
         this.op_name = 'MATH';
-        //    public rebase_functions = [];
         this.rebase_functions = [
             ['MATH', function (_other, conflictless) {
                     var other = _other;
