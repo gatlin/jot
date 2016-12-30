@@ -18,12 +18,66 @@ exports.PUT = objects_1.PUT;
 exports.REN = objects_1.REN;
 exports.REM = objects_1.REM;
 exports.OBJECT_APPLY = objects_1.APPLY;
-function opFromJsonableObject(obj, op_map) {
+var values = require('./values');
+var sequences = require('./sequences');
+var objects = require('./objects');
+var meta = require('./meta');
+var ctor_table = {
+    'values': {
+        'NO_OP': function (obj) {
+            return new values.NO_OP();
+        },
+        'SET': function (obj) {
+            return new values.SET(obj.old_value, obj.new_value);
+        },
+        'MATH': function (obj) {
+            return new values.MATH(obj.operator, obj.operand);
+        }
+    },
+    'objects': {
+        'PUT': function (obj) {
+            return new objects.PUT(obj.key, obj.value);
+        },
+        'REM': function (obj) {
+            return new objects.REM(obj.key, obj.old_value);
+        },
+        'REN': function (obj) {
+            return new objects.REN(obj.old_key, obj.new_key);
+        },
+        'APPLY': function (obj) {
+            return new objects.APPLY(obj.key, opFromJsonableObject(obj.op));
+        }
+    },
+    'sequences': {
+        'SPLICE': function (obj) {
+            return new sequences.SPLICE(obj.pos, obj.old_value, obj.new_value);
+        },
+        'MOVE': function (obj) {
+            return new sequences.MOVE(obj.pos, obj.count, obj.new_pos);
+        },
+        'APPLY': function (obj) {
+            return new sequences.APPLY(obj.pos, opFromJsonableObject(obj.op));
+        },
+        'MAP': function (obj) {
+            return new sequences.MAP(opFromJsonableObject(obj.op));
+        }
+    },
+    'meta': {
+        'LIST': function (obj) {
+            return new meta.LIST(obj.ops.map(function (o) { return opFromJsonableObject(o); }));
+        }
+    }
+};
+function opFromJsonableObject(obj) {
     if (!('_type' in obj)) {
         throw 'Invalid argument: not an operation';
     }
-    /** TODO
-        FINISH ME
-     */
+    var module_name = obj['_type']['module'];
+    var op_name = obj['_type']['class'];
+    return ctor_table[module_name][op_name](obj);
 }
 exports.opFromJsonableObject = opFromJsonableObject;
+function deserialize(op_json) {
+    return opFromJsonableObject(JSON.parse(op_json));
+}
+exports.deserialize = deserialize;

@@ -60,7 +60,9 @@ var BaseOperation = (function () {
             if (this[keys[i]] instanceof BaseOperation) {
                 v = this[keys[i]].inspect(depth - 1);
             }
-            else if (typeof this[keys[i]] !== 'undefined') {
+            else if (typeof this[keys[i]] !== 'undefined' &&
+                (keys[i] !== '_type' &&
+                    keys[i] !== 'rebase_functions')) {
                 v = util.format("%j", this[keys[i]]);
             }
             else {
@@ -82,7 +84,9 @@ var BaseOperation = (function () {
             else if (keys[i] === 'ops' && Array.isArray(this[keys[i]])) {
                 v = this[keys[i]].map(function (ki) { return ki.toJsonableObject(); });
             }
-            else if (typeof this[keys[i]] !== 'undefined') {
+            else if (typeof this[keys[i]] !== 'undefined' &&
+                (keys[i] !== 'rebase_functions' &&
+                    keys[i] !== '_type')) {
                 v = this[keys[i]];
             }
             else {
