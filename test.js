@@ -2,6 +2,7 @@ let jot = require('./jot');
 let objs = require('./jot/objects');
 let values = require('./jot/values');
 let deepEqual = require('deep-equal');
+let assert = require('assert');
 
 let doc = {
     key1: 'Hello World!',
@@ -28,8 +29,22 @@ let user2_rebased = user2.rebase(user1);
 console.log('applying combo', user1.compose(user2_rebased).apply(doc));
 
 let o1 = new objs.PUT('key', 'value2').rebase(
-    new objs.PUT('key', 'value1'), true);
+    new objs.PUT('key', 'value1'), true)
+    .toJsonableObject();
 
-let o2 = new objs.APPLY('key', new values.SET('value1', 'value2'));
+let o2 = new objs.APPLY('key', new values.SET('value1', 'value2'))
+    .toJsonableObject();
 
-console.log(deepEqual(o1, o2));
+
+console.log('o1', o1);
+console.log('o2', o2);
+console.log('o1 === o2', deepEqual(o1, o2));
+
+let reconstituted = jot.opFromJsonableObject(
+    new objs.REM('0','1')
+    .toJsonableObject());
+
+let orig = new objs.REM('0','1');
+
+let cons = jot.LIST;
+console.log(cons.prototype.constructor_args);

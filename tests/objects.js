@@ -23,7 +23,7 @@ t.equal(
 	'<objects.APPLY {key:"0", op:<values.SET {old_value:1, new_value:2}>}>');
 
 // serialization
-/*
+
 t.deepEqual(
 	jot.opFromJsonableObject(new objs.PUT("0", "1").toJsonableObject()),
 	new objs.PUT("0", "1"));
@@ -36,7 +36,7 @@ t.deepEqual(
 t.deepEqual(
 	jot.opFromJsonableObject(new objs.APPLY("0", new values.SET(1, 2)).toJsonableObject()),
 	new objs.APPLY("0", new values.SET(1, 2)));
-*/
+
 // apply
 
 t.deepEqual(
@@ -104,8 +104,8 @@ t.deepEqual(
 	new values.NO_OP())
 t.deepEqual(
 	new objs.PUT("key", "value2").rebase(
-		new objs.PUT("key", "value1"), true),
-	new objs.APPLY("key", new values.SET("value1", "value2")))
+		new objs.PUT("key", "value1"), true).toJsonableObject(),
+	new objs.APPLY("key", new values.SET("value1", "value2")).toJsonableObject())
 
 t.deepEqual(
 	new objs.REM("key", "value").rebase(
