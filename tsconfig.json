@@ -1,0 +1,9 @@
+{
+    "version": "2.0",
+    "compilerOptions": {
+        "outDir": "build"
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
