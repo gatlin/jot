@@ -4,6 +4,17 @@ var values = require("./values");
 var meta = require("./meta");
 var objects = require("./objects");
 var sequences = require("./sequences");
+// Run the diff method appropriate for the pair of data types.
+function typename(val) {
+    if (val === null)
+        return "null";
+    if (typeof val == "string" || typeof val == "number" || typeof val ==
+        "boolean")
+        return typeof val;
+    if (Array.isArray(val))
+        return "array";
+    return "object";
+}
 function _diff(a, b, options) {
     // Compares two JSON-able data instances and returns
     // information about the difference:
@@ -23,17 +34,6 @@ function _diff(a, b, options) {
             pct: 0.0,
             size: JSON.stringify(a).length
         };
-    }
-    // Run the diff method appropriate for the pair of data types.
-    function typename(val) {
-        if (val === null)
-            return "null";
-        if (typeof val == "string" || typeof val == "number" || typeof val ==
-            "boolean")
-            return typeof val;
-        if (Array.isArray(val))
-            return "array";
-        return "object";
     }
     var ta = typename(a);
     var tb = typename(b);
@@ -101,7 +101,7 @@ function diff_strings(a, b, options) {
     })
         .filter(function (item) { return item != null; });
     // Merge consecutive INS/DELs into SPLICES.
-    var op = new meta.LIST(ops).simplify();
+    var op = new meta.LIST(ops);
     // If the change is a single operation that replaces the whole content
     // of the string, use a SET operation rather than a SPLICE operation.
     if (op instanceof sequences.SPLICE && op.old_value == a && op.new_value ==
@@ -145,49 +145,35 @@ function diff_arrays(a, b, options) {
         var hunks = [];
         var a_index = 0;
         var b_index = 0;
-        generic_diff(ai, bi, function (ai, bi) {
-            return diff(a[ai], b[bi], options).pct <= level;
-        }).forEach(function (change) {
+        generic_diff(ai, bi, function (ai, bi) { return diff(a[ai], b[bi], options).pct <= level; }).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
-                if (a_index + change.items.length > ai.length) {
+                if (a_index + change.items.length > ai.length)
                     throw "out of range";
-                }
-                if (b_index + change.items.length > bi.length) {
+                if (b_index + change.items.length > bi.length)
                     throw "out of range";
-                }
-                hunks.push({
-                    type: 'equal', ai: ai.slice(a_index, a_index +
-                        change.items.length),
-                    bi: bi.slice(b_index, b_index +
-                        change.items.length)
-                });
+                hunks.push({ type: 'equal', ai: ai.slice(a_index, a_index + change.items.length), bi: bi.slice(b_index, b_index + change.items.length) });
                 a_index += change.items.length;
                 b_index += change.items.length;
             }
             else {
-                if (hunks.length == 0 ||
-                    hunks[hunks.length - 1].type == 'equal') {
+                if (hunks.length == 0 || hunks[hunks.length - 1].type == 'equal')
                     hunks.push({ type: 'unequal', ai: [], bi: [] });
-                }
                 if (change.added) {
                     // Added.
-                    hunks[hunks.length - 1].bi = hunks[hunks.length -
-                        1].bi.concat(change.items);
+                    hunks[hunks.length - 1].bi = hunks[hunks.length - 1].bi.concat(change.items);
                     b_index += change.items.length;
                 }
                 else if (change.removed) {
                     // Removed.
-                    hunks[hunks.length - 1].ai = hunks[hunks.length -
-                        1].ai.concat(change.items);
+                    hunks[hunks.length - 1].ai = hunks[hunks.length - 1].ai.concat(change.items);
                     a_index += change.items.length;
                 }
             }
         });
         // Process each hunk.
         hunks.forEach(function (hunk) {
-            //console.log(level, hunk.type, hunk.ai.map(function(i) { return
-            //a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
+            //console.log(level, hunk.type, hunk.ai.map(function(i) { return a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
             if (level < 1 && hunk.ai.length > 0 && hunk.bi.length > 0
                 && (level > 0 || hunk.type == "unequal")) {
                 // Recurse at a less strict comparison level to
@@ -211,21 +197,13 @@ function diff_arrays(a, b, options) {
             else {
                 // The items in the arrays are in correspondence.
                 // They may not be identical, however, if level > 0.
-                if (hunk.ai.length != hunk.bi.length) {
+                if (hunk.ai.length != hunk.bi.length)
                     throw "should be same length";
-                }
                 for (var i = 0; i < hunk.ai.length; i++) {
                     var d = diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
-                        var ap = void 0;
-                        if (typeof hunk.bi[i] === 'string') {
-                            ap = new objects.APPLY(hunk.bi[i], d.op);
-                        }
-                        if (typeof hunk.bi[i] === 'number') {
-                            ap = new sequences.APPLY(hunk.bi[i], d.op);
-                        }
-                        ops.push(ap);
+                        ops.push(new sequences.APPLY(hunk.bi[i], d.op));
                     }
                     // Increment counters.
                     total_content += d.size;
@@ -240,7 +218,6 @@ function diff_arrays(a, b, options) {
     return {
         op: new meta.LIST(ops).simplify(),
         pct: (changed_content + 1) / (total_content + 1),
-        // zero
         size: total_content
     };
 }
@@ -249,12 +226,13 @@ function diff_objects(a, b, options) {
     var ops = [];
     var total_content = 0;
     var changed_content = 0;
+    var d;
     // If a key exists in both objects, then assume the key
     // has not been renamed.
     for (var key in a) {
         if (key in b) {
             // Compute diff.
-            var d = diff(a[key], b[key], options);
+            d = _diff(a[key], b[key], options);
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
                 var ap = void 0;
@@ -283,7 +261,7 @@ function diff_objects(a, b, options) {
             if (key2 in a) {
                 continue;
             }
-            var d = diff(a[key1], b[key2], options);
+            d = _diff(a[key1], b[key2], options);
             if (d.pct == 1) {
                 continue;
             }
