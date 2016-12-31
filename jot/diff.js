@@ -219,7 +219,7 @@ function diff_arrays(a, b, options) {
                     throw "should be same length";
                 }
                 for (var i = 0; i < hunk.ai.length; i++) {
-                    var d = diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
+                    var d = _diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
                         var ap = void 0;
@@ -258,7 +258,7 @@ function diff_objects(a, b, options) {
     for (var key in a) {
         if (key in b) {
             // Compute diff.
-            var d = diff(a[key], b[key], options);
+            var d = _diff(a[key], b[key], options);
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
                 var ap = void 0;
@@ -287,7 +287,7 @@ function diff_objects(a, b, options) {
             if (key2 in a) {
                 continue;
             }
-            var d = diff(a[key1], b[key2], options);
+            var d = _diff(a[key1], b[key2], options);
             if (d.pct == 1) {
                 continue;
             }
