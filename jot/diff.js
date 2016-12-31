@@ -106,16 +106,18 @@ function diff_strings(a, b, options) {
     })
         .filter(function (item) { return item != null; });
     // Merge consecutive INS/DELs into SPLICES.
-    var op = new meta.LIST(ops);
+    var op = new meta.LIST(ops).simplify();
     // If the change is a single operation that replaces the whole content
     // of the string, use a SET operation rather than a SPLICE operation.
-    if (op instanceof sequences.SPLICE && op.old_value == a && op.new_value ==
-        b) {
-        return {
-            op: new values.SET(a, b),
-            pct: 1.0,
-            size: total_content
-        };
+    if (op instanceof sequences.SPLICE) {
+        var _op = op;
+        if (_op.old_value == a && _op.new_value == b) {
+            return {
+                op: new values.SET(a, b),
+                pct: 1.0,
+                size: total_content
+            };
+        }
     }
     return {
         op: op,
@@ -150,7 +152,9 @@ function diff_arrays(a, b, options) {
         var hunks = [];
         var a_index = 0;
         var b_index = 0;
-        generic_diff(ai, bi, function (ai, bi) { return diff(a[ai], b[bi], options).pct <= level; }).forEach(function (change) {
+        generic_diff(ai, bi, function (ai, bi) {
+            return _diff(a[ai], b[bi], options).pct <= level;
+        }).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
                 if (a_index + change.items.length > ai.length)
@@ -209,7 +213,12 @@ function diff_arrays(a, b, options) {
                     var d = _diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
-                        ops.push(new sequences.APPLY(hunk.bi[i], d.op));
+                        if (typeof hunk.bi[i] === 'number') {
+                            ops.push(new sequences.APPLY(hunk.bi[i], d.op));
+                        }
+                        if (typeof hunk.bi[i] === 'string') {
+                            ops.push(new objects.APPLY(hunk.bi[i], d.op));
+                        }
                     }
                     // Increment counters.
                     total_content += d.size;
@@ -222,7 +231,7 @@ function diff_arrays(a, b, options) {
     // Go.
     do_diff(ai, bi, 0);
     return {
-        op: new meta.LIST(ops),
+        op: new meta.LIST(ops).simplify(),
         pct: (changed_content + 1) / (total_content + 1),
         // zero
         size: total_content
@@ -242,13 +251,7 @@ function diff_objects(a, b, options) {
             d = _diff(a[key], b[key], options);
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
-                var ap = void 0;
-                if (typeof key === 'string') {
-                    ap = new objects.APPLY(key, d.op);
-                }
-                if (typeof key === 'number') {
-                    ap = new sequences.APPLY(key, d.op);
-                }
+                var ap = new objects.APPLY(key, d.op);
                 ops.push(ap);
             }
             // Increment counters.
@@ -268,14 +271,14 @@ function diff_objects(a, b, options) {
             if (key2 in a) {
                 continue;
             }
-            d = _diff(a[key1], b[key2], options);
-            if (d.pct == 1) {
+            var d_1 = _diff(a[key1], b[key2], options);
+            if (d_1.pct == 1) {
                 continue;
             }
             pairs.push({
                 a_key: key1,
                 b_key: key2,
-                diff: d
+                diff: d_1
             });
         }
     }

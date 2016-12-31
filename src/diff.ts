@@ -84,6 +84,7 @@ export function diff(a, b, options = undefined) {
 }
 
 function diff_strings(a, b, options): Diff {
+
     // Use the 'diff' package to compare two strings and convert
     // the output to a jot.LIST.
     let diff = require("diff");
@@ -130,19 +131,20 @@ function diff_strings(a, b, options): Diff {
         .filter(item => item != null);
 
     // Merge consecutive INS/DELs into SPLICES.
-    let op = new meta.LIST(ops);
+    let op = new meta.LIST(ops).simplify();
 
     // If the change is a single operation that replaces the whole content
     // of the string, use a SET operation rather than a SPLICE operation.
-    if (op instanceof sequences.SPLICE && op.old_value == a && op.new_value ==
-        b) {
-        return {
-            op: new values.SET(a, b),
-            pct: 1.0,
-            size: total_content
-        };
+    if (op instanceof sequences.SPLICE) {
+        let _op = op as sequences.SPLICE;
+        if (_op.old_value == a && _op.new_value == b) {
+            return {
+                op: new values.SET(a, b),
+                pct: 1.0,
+                size: total_content
+            };
+        }
     }
-
     return {
         op: op,
         pct: (changed_content + 1) / (total_content + 1), // avoid divizion by
@@ -150,6 +152,7 @@ function diff_strings(a, b, options): Diff {
         size: total_content
     };
 }
+
 function diff_arrays(a, b, options) {
     // Use the 'generic-diff' package to compare two arrays,
     // but using a custom equality function. This gives us
@@ -182,7 +185,9 @@ function diff_arrays(a, b, options) {
         var b_index = 0;
         generic_diff(
             ai, bi,
-            function (ai, bi) { return diff(a[ai], b[bi], options).pct <= level; }
+            function (ai, bi) {
+                return _diff(a[ai], b[bi], options).pct <= level;
+            }
         ).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
@@ -249,7 +254,13 @@ function diff_arrays(a, b, options) {
 
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
-                        ops.push(new sequences.APPLY(hunk.bi[i], d.op));
+                        if (typeof hunk.bi[i] === 'number') {
+                            ops.push(new sequences.APPLY(hunk.bi[i], d.op));
+                        }
+
+                        if (typeof hunk.bi[i] === 'string') {
+                            ops.push(new objects.APPLY(hunk.bi[i], d.op));
+                        }
                     }
 
                     // Increment counters.
@@ -267,7 +278,7 @@ function diff_arrays(a, b, options) {
     do_diff(ai, bi, 0);
 
     return {
-        op: new meta.LIST(ops),
+        op: new meta.LIST(ops).simplify(),
         pct: (changed_content + 1) / (total_content + 1), // avoid divizion by
         // zero
         size: total_content
@@ -292,14 +303,7 @@ function diff_objects(a, b, options): Diff {
 
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
-                let ap;
-                if (typeof key === 'string') {
-                    ap = new objects.APPLY(key, d.op);
-                }
-
-                if (typeof key === 'number') {
-                    ap = new sequences.APPLY(key, d.op);
-                }
+                let ap = new objects.APPLY(key, d.op);
                 ops.push(ap);
             }
 
@@ -321,7 +325,7 @@ function diff_objects(a, b, options): Diff {
             if (key2 in a) {
                 continue;
             }
-            d = _diff(a[key1], b[key2], options);
+            let d = _diff(a[key1], b[key2], options);
             if (d.pct == 1) {
                 continue;
             }
@@ -332,7 +336,6 @@ function diff_objects(a, b, options): Diff {
             });
         }
     }
-
     // Sort the pairs to choose the best matches first.
     // (This is a greedy approach. May not be optimal.)
     let used_a = {};
@@ -351,6 +354,7 @@ function diff_objects(a, b, options): Diff {
         if (item.b_key in used_b) {
             return;
         }
+
         used_a[item.a_key] = 1;
         used_b[item.b_key] = 1;
 

@@ -347,9 +347,8 @@ var APPLY = (function (_super) {
         return _this;
     }
     APPLY.prototype.apply = function (document) {
-        var wut = elem(document, this.pos);
-        var huh = this.op.apply(wut);
-        return concat3(document.slice(0, this.pos), huh, document.slice(this.pos + 1, document.length));
+        var self = this;
+        return concat3(document.slice(0, this.pos), unelem(self.op.apply(elem(document, this.pos), document)), document.slice(this.pos + 1, document.length));
     };
     APPLY.prototype.simplify = function () {
         var op = this.op.simplify();
@@ -606,6 +605,7 @@ function elem(seq, pos) {
     }
 }
 function unelem(elem, seq) {
+    if (seq === void 0) { seq = undefined; }
     if (typeof seq === 'string') {
         return elem;
     }

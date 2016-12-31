@@ -492,11 +492,10 @@ export class APPLY extends BaseOperation {
     }
 
     public apply(document: any): any {
-        let wut: any = elem(document, this.pos);
-        let huh: any = this.op.apply(wut);
+        let self: any = this;
         return concat3(
             document.slice(0, this.pos),
-            huh,
+            unelem(self.op.apply(elem(document, this.pos), document)),
             document.slice(this.pos + 1, document.length));
     }
 
@@ -741,7 +740,7 @@ function elem(seq, pos) {
     }
 }
 
-function unelem(elem, seq) {
+function unelem(elem: any, seq = undefined) {
     if (typeof seq === 'string') {
         return elem;
     } else {
