@@ -345,7 +345,16 @@ export class APPLY extends BaseOperation {
     }
 
     public apply(document: any): any {
+        /*
         const d = shallow_clone(document);
+        d[this.key] = this.op.apply(d[this.key]);
+        return d;
+        */
+        const d = {};
+        for (let k in document) {
+            d[k] = document[k];
+        }
+
         d[this.key] = this.op.apply(d[this.key]);
         return d;
     }

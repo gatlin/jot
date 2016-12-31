@@ -4,6 +4,21 @@ var values = require("./values");
 var meta = require("./meta");
 var objects = require("./objects");
 var sequences = require("./sequences");
+// Run the diff method appropriate for the pair of data types.
+function typename(val) {
+    if (val === null) {
+        return "null";
+    }
+    if (typeof val === "string" ||
+        typeof val === "number" ||
+        typeof val === "boolean") {
+        return typeof val;
+    }
+    if (Array.isArray(val)) {
+        return "array";
+    }
+    return "object";
+}
 function _diff(a, b, options) {
     // Compares two JSON-able data instances and returns
     // information about the difference:
@@ -23,17 +38,6 @@ function _diff(a, b, options) {
             pct: 0.0,
             size: JSON.stringify(a).length
         };
-    }
-    // Run the diff method appropriate for the pair of data types.
-    function typename(val) {
-        if (val === null)
-            return "null";
-        if (typeof val == "string" || typeof val == "number" || typeof val ==
-            "boolean")
-            return typeof val;
-        if (Array.isArray(val))
-            return "array";
-        return "object";
     }
     var ta = typename(a);
     var tb = typename(b);

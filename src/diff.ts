@@ -1,6 +1,6 @@
 import * as deepEqual from 'deep-equal';
 
-import { BaseOperation, type_name } from './base';
+import { BaseOperation } from './base';
 import * as values from './values';
 import * as meta from './meta';
 import * as objects from './objects';
@@ -14,13 +14,17 @@ type Diff = {
 // Run the diff method appropriate for the pair of data types.
 
 function typename(val) {
-    if (val === null)
+    if (val === null) {
         return "null";
-    if (typeof val == "string" || typeof val == "number" || typeof val ==
-        "boolean")
+    }
+    if (typeof val === "string" ||
+        typeof val === "number" ||
+        typeof val === "boolean") {
         return typeof val;
-    if (Array.isArray(val))
+    }
+    if (Array.isArray(val)) {
         return "array";
+    }
     return "object";
 }
 
@@ -69,7 +73,7 @@ function _diff(a, b, options) {
         op: new values.SET(a, b),
         pct: 1.0,
         size: (JSON.stringify(a) + JSON.stringify(b)).length / 2
-    }
+    };
 }
 
 export function diff(a, b, options = undefined) {
