@@ -56,7 +56,6 @@ export function cmp(a, b) {
 
 export abstract class BaseOperation {
 
-    public type: Array<any>; // kludge
     public static rebase_functions: Array<RebaseFunction> = [];
     public abstract _type: Array<string>;
 
