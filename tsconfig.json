@@ -1,7 +1,8 @@
 {
     "version": "2.0",
     "compilerOptions": {
-        "outDir": "jot"
+        "outDir": "jot",
+        "target": "es5"
     },
     "exclude": [
         "node_modules"

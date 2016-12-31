@@ -16,6 +16,9 @@
   },
   "devDependencies": {
     "connect": "*",
-    "tap": "~0.4.9"
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.1.3",
+    "tap": "~0.4.9",
+    "typescript": "^2.1.4"
   }
 }

@@ -5,8 +5,8 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var util = require('util');
-var deepEqual = require('deep-equal');
+var util = require("util");
+var deepEqual = require("deep-equal");
 function type_name(x) {
     if (typeof x === 'object') {
         if (Array.isArray(x)) {
@@ -127,16 +127,17 @@ var BaseOperation = (function () {
         }
         return null;
     };
-    BaseOperation.rebase_functions = [];
     return BaseOperation;
 }());
+BaseOperation.rebase_functions = [];
 exports.BaseOperation = BaseOperation;
 var NO_OP = (function (_super) {
     __extends(NO_OP, _super);
     function NO_OP() {
-        _super.call(this);
-        this._type = ['values', 'NO_OP'];
-        Object.freeze(this);
+        var _this = _super.call(this) || this;
+        _this._type = ['values', 'NO_OP'];
+        Object.freeze(_this);
+        return _this;
     }
     NO_OP.prototype.apply = function (document) {
         return document;
@@ -157,11 +158,12 @@ var SET = (function (_super) {
     __extends(SET, _super);
     function SET(old_value, new_value) {
         if (new_value === void 0) { new_value = undefined; }
-        _super.call(this);
-        this._type = ['values', 'SET'];
-        this.old_value = old_value;
-        this.new_value = new_value;
-        Object.freeze(this);
+        var _this = _super.call(this) || this;
+        _this._type = ['values', 'SET'];
+        _this.old_value = old_value;
+        _this.new_value = new_value;
+        Object.freeze(_this);
+        return _this;
     }
     SET.prototype.apply = function (document) {
         return this.new_value;
@@ -179,46 +181,47 @@ var SET = (function (_super) {
         return new SET(this.old_value, other.apply(this.new_value))
             .simplify();
     };
-    SET.rebase_functions = [
-        ['SET', function (_other, conflictless) {
-                var other = _other;
-                if (deepEqual(this.new_value, other.new_value)) {
-                    return [new NO_OP(), new NO_OP()];
-                }
-                if (conflictless && cmp(this.new_value, other.new_value) < 0) {
-                    return [new NO_OP(), new SET(this.new_value, other.new_value)];
-                }
-                return null;
-            }],
-        ['MATH', function (_other, conflictless) {
-                var other = _other;
-                try {
-                    return [new SET(other.apply(this.old_value), other.apply(this.new_value)),
-                        other
-                    ];
-                }
-                catch (e) {
-                    if (conflictless) {
-                        return [
-                            new SET(other.apply(this.old_value), this.new_value),
-                            new NO_OP()
-                        ];
-                    }
-                }
-                return null;
-            }]
-    ];
     return SET;
 }(BaseOperation));
+SET.rebase_functions = [
+    ['SET', function (_other, conflictless) {
+            var other = _other;
+            if (deepEqual(this.new_value, other.new_value)) {
+                return [new NO_OP(), new NO_OP()];
+            }
+            if (conflictless && cmp(this.new_value, other.new_value) < 0) {
+                return [new NO_OP(), new SET(this.new_value, other.new_value)];
+            }
+            return null;
+        }],
+    ['MATH', function (_other, conflictless) {
+            var other = _other;
+            try {
+                return [new SET(other.apply(this.old_value), other.apply(this.new_value)),
+                    other
+                ];
+            }
+            catch (e) {
+                if (conflictless) {
+                    return [
+                        new SET(other.apply(this.old_value), this.new_value),
+                        new NO_OP()
+                    ];
+                }
+            }
+            return null;
+        }]
+];
 exports.SET = SET;
 var MATH = (function (_super) {
     __extends(MATH, _super);
     function MATH(operator, operand) {
-        _super.call(this);
-        this._type = ['values', 'MATH'];
-        this.operator = operator;
-        this.operand = operand;
-        Object.freeze(this);
+        var _this = _super.call(this) || this;
+        _this._type = ['values', 'MATH'];
+        _this.operator = operator;
+        _this.operand = operand;
+        Object.freeze(_this);
+        return _this;
     }
     MATH.prototype.apply = function (document) {
         if (typeof document !== 'number' && typeof document !== 'boolean') {
@@ -304,28 +307,28 @@ var MATH = (function (_super) {
         }
         return null;
     };
-    MATH.rebase_functions = [
-        ['MATH', function (_other, conflictless) {
-                var other = _other;
-                if (this.operator === other.operator) {
-                    if (this.operator !== 'rot' ||
-                        this.operand[1] === other.operand[1]) {
-                        return [this, other];
-                    }
-                }
-                if (conflictless) {
-                    if (cmp([this.operator, this.operand], [other.operator, other.operand]) < 0) {
-                        return [
-                            this,
-                            new LIST([this.invert(), other, this])
-                        ];
-                    }
-                }
-                return null;
-            }]
-    ];
     return MATH;
 }(BaseOperation));
+MATH.rebase_functions = [
+    ['MATH', function (_other, conflictless) {
+            var other = _other;
+            if (this.operator === other.operator) {
+                if (this.operator !== 'rot' ||
+                    this.operand[1] === other.operand[1]) {
+                    return [this, other];
+                }
+            }
+            if (conflictless) {
+                if (cmp([this.operator, this.operand], [other.operator, other.operand]) < 0) {
+                    return [
+                        this,
+                        new LIST([this.invert(), other, this])
+                    ];
+                }
+            }
+            return null;
+        }]
+];
 exports.MATH = MATH;
 function rebase_array(base, ops) {
     if (ops.length === 0 || base.length === 0) {
@@ -368,16 +371,17 @@ function rebase_array(base, ops) {
 var LIST = (function (_super) {
     __extends(LIST, _super);
     function LIST(ops) {
-        _super.call(this);
-        this._type = ['meta', 'LIST'];
+        var _this = _super.call(this) || this;
+        _this._type = ['meta', 'LIST'];
         if (ops === null) {
             throw 'Invalid argument';
         }
         if (!(ops instanceof Array)) {
             throw 'Invalid argument';
         }
-        this.ops = ops;
-        Object.freeze(this);
+        _this.ops = ops;
+        Object.freeze(_this);
+        return _this;
     }
     LIST.prototype.apply = function (document) {
         for (var i = 0; i < this.ops.length; i++) {
