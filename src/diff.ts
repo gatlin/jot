@@ -28,6 +28,8 @@ function typename(val) {
     return "object";
 }
 
+let d: Diff;
+
 function _diff(a, b, options) {
     // Compares two JSON-able data instances and returns
     // information about the difference:
@@ -84,7 +86,7 @@ export function diff(a, b, options = undefined) {
 function diff_strings(a, b, options): Diff {
     // Use the 'diff' package to compare two strings and convert
     // the output to a jot.LIST.
-    const diff = require("diff");
+    let diff = require("diff");
 
     let method = "Chars";
     if (options.words) {
@@ -182,7 +184,7 @@ function diff_arrays(a, b, options): Diff {
         generic_diff(
             ai, bi,
             (ai, bi) => {
-                return diff(a[ai], b[bi], options).pct <= level;
+                return _diff(a[ai], b[bi], options).pct <= level;
             }
         ).forEach(change => {
             if (!change.removed && !change.added) {
@@ -260,7 +262,7 @@ function diff_arrays(a, b, options): Diff {
                     throw "should be same length";
                 }
                 for (let i = 0; i < hunk.ai.length; i++) {
-                    let d = _diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
+                    var d = _diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
 
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
@@ -290,7 +292,7 @@ function diff_arrays(a, b, options): Diff {
     do_diff(ai, bi, 0);
 
     return {
-        op: new meta.LIST(ops).simplify(),
+        op: new meta.LIST(ops),
         pct: (changed_content + 1) / (total_content + 1), // avoid divizion by
         // zero
         size: total_content
@@ -304,12 +306,14 @@ function diff_objects(a, b, options): Diff {
     let total_content = 0;
     let changed_content = 0;
 
+    let d: Diff;
+
     // If a key exists in both objects, then assume the key
     // has not been renamed.
     for (let key in a) {
         if (key in b) {
             // Compute diff.
-            let d: Diff = _diff(a[key], b[key], options);
+            d = _diff(a[key], b[key], options);
 
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
@@ -342,7 +346,7 @@ function diff_objects(a, b, options): Diff {
             if (key2 in a) {
                 continue;
             }
-            let d = _diff(a[key1], b[key2], options);
+            d = _diff(a[key1], b[key2], options);
             if (d.pct == 1) {
                 continue;
             }
@@ -356,12 +360,12 @@ function diff_objects(a, b, options): Diff {
 
     // Sort the pairs to choose the best matches first.
     // (This is a greedy approach. May not be optimal.)
-    var used_a = {};
-    var used_b = {};
-    pairs.sort((a, b) => {
+    let used_a = {};
+    let used_b = {};
+    pairs.sort(function (a, b) {
         return ((a.diff.pct * a.diff.size) -
             (b.diff.pct * b.diff.size));
-    })
+    });
     pairs.forEach(item => {
         // Have we already generated an operation renaming
         // the key in a or renaming something to the key in b?
@@ -392,7 +396,7 @@ function diff_objects(a, b, options): Diff {
         // Increment counters.
         total_content += item.diff.size;
         changed_content += item.diff.size * item.diff.pct;
-    })
+    });
 
     // Delete/create any keys that didn't match up.
     for (let key in a) {

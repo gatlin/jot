@@ -19,6 +19,7 @@ function typename(val) {
     }
     return "object";
 }
+var d;
 function _diff(a, b, options) {
     // Compares two JSON-able data instances and returns
     // information about the difference:
@@ -150,7 +151,7 @@ function diff_arrays(a, b, options) {
         var a_index = 0;
         var b_index = 0;
         generic_diff(ai, bi, function (ai, bi) {
-            return diff(a[ai], b[bi], options).pct <= level;
+            return _diff(a[ai], b[bi], options).pct <= level;
         }).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
@@ -242,7 +243,7 @@ function diff_arrays(a, b, options) {
     // Go.
     do_diff(ai, bi, 0);
     return {
-        op: new meta.LIST(ops).simplify(),
+        op: new meta.LIST(ops),
         pct: (changed_content + 1) / (total_content + 1),
         // zero
         size: total_content
@@ -253,12 +254,13 @@ function diff_objects(a, b, options) {
     var ops = [];
     var total_content = 0;
     var changed_content = 0;
+    var d;
     // If a key exists in both objects, then assume the key
     // has not been renamed.
     for (var key in a) {
         if (key in b) {
             // Compute diff.
-            var d = _diff(a[key], b[key], options);
+            d = _diff(a[key], b[key], options);
             // Add operation if there were any changes.
             if (!(d.op instanceof values.NO_OP)) {
                 var ap = void 0;
@@ -287,7 +289,7 @@ function diff_objects(a, b, options) {
             if (key2 in a) {
                 continue;
             }
-            var d = _diff(a[key1], b[key2], options);
+            d = _diff(a[key1], b[key2], options);
             if (d.pct == 1) {
                 continue;
             }
