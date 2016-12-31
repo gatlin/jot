@@ -638,7 +638,6 @@ export function from_diff(old_value, new_value, mode) {
     // characters. Mode can also be 'words' or 'lines'.
 
     var diff_match_patch = require('googlediff');
-    var jot: any = require('./index.js');
     var dmp = new diff_match_patch();
 
     /////////////////////////////////////////////////////////////

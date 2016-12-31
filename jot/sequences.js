@@ -503,7 +503,6 @@ function from_diff(old_value, new_value, mode) {
     // If mode is undefined or 'chars', the diff is performed over
     // characters. Mode can also be 'words' or 'lines'.
     var diff_match_patch = require('googlediff');
-    var jot = require('./index.js');
     var dmp = new diff_match_patch();
     /////////////////////////////////////////////////////////////
     // adapted from diff_match_patch.prototype.diff_linesToChars_
