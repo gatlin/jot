@@ -309,7 +309,7 @@ var MATH = (function (_super) {
                 var other = _other;
                 if (this.operator === other.operator) {
                     if (this.operator !== 'rot' ||
-                        this.operand[1] !== other.operand[1]) {
+                        this.operand[1] === other.operand[1]) {
                         return [this, other];
                     }
                 }

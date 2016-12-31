@@ -268,7 +268,7 @@ export class MATH extends BaseOperation {
             let other = _other as MATH;
             if (this.operator === other.operator) {
                 if (this.operator !== 'rot' ||
-                    this.operand[1] !== other.operand[1]) {
+                    this.operand[1] === other.operand[1]) {
                     return [this, other];
                 }
             }
