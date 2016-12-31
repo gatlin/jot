@@ -5,7 +5,7 @@ import * as deepEqual from 'deep-equal';
 
 type RebaseFunction = any; // kludge
 
-function type_name(x) {
+export function type_name(x) {
     if (typeof x === 'object') {
         if (Array.isArray(x)) {
             return 'array';

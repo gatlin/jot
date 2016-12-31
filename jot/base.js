@@ -16,6 +16,7 @@ function type_name(x) {
     }
     return typeof x;
 }
+exports.type_name = type_name;
 // generic comparison function for many different types
 function cmp(a, b) {
     if (type_name(a) !== type_name(b)) {

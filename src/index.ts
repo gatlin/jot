@@ -24,6 +24,8 @@ export {
     APPLY as OBJECT_APPLY
 } from './objects';
 
+export { diff } from './diff';
+
 import { BaseOperation } from './base';
 import * as values from './values';
 import * as sequences from './sequences';

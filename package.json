@@ -4,7 +4,9 @@
   "description": "JSON Operational Transformation",
   "dependencies": {
     "googlediff": "*",
-    "deep-equal": "*"
+      "deep-equal": "*",
+      "diff": "3.0.1",
+      "generic-diff":"1.0.1"
   },
   "repository": {
     "type": "git",
