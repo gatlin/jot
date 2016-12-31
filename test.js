@@ -29,11 +29,9 @@ let user2_rebased = user2.rebase(user1);
 console.log('applying combo', user1.compose(user2_rebased).apply(doc));
 
 let o1 = new objs.PUT('key', 'value2').rebase(
-    new objs.PUT('key', 'value1'), true)
-    .toJsonableObject();
+    new objs.PUT('key', 'value1'), true);
 
-let o2 = new objs.APPLY('key', new values.SET('value1', 'value2'))
-    .toJsonableObject();
+let o2 = new objs.APPLY('key', new values.SET('value1', 'value2'));
 
 
 console.log('o1', o1);
@@ -47,4 +45,7 @@ let reconstituted = jot.opFromJsonableObject(
 let orig = new objs.REM('0','1');
 
 let cons = jot.LIST;
-console.log(cons.prototype.constructor_args);
+
+let shouldBeNull = new objs.APPLY('key', new values.SET('x', 'y')).rebase(
+    new objs.APPLY('key', new values.SET('x', 'z')));
+console.log('should be not ok', shouldBeNull);

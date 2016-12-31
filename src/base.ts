@@ -57,7 +57,7 @@ export function cmp(a, b) {
 export abstract class BaseOperation {
 
     public type: Array<any>; // kludge
-    public abstract rebase_functions: Array<RebaseFunction>;
+    public static rebase_functions: Array<RebaseFunction> = [];
     public abstract _type: Array<string>;
 
     public inspect(depth) {
@@ -69,8 +69,7 @@ export abstract class BaseOperation {
                 v = this[keys[i]].inspect(depth - 1);
             }
             else if (typeof this[keys[i]] !== 'undefined' &&
-                (keys[i] !== '_type' &&
-                    keys[i] !== 'rebase_functions')) {
+                keys[i] !== '_type') {
                 v = util.format("%j", this[keys[i]]);
             }
             else {
@@ -98,8 +97,7 @@ export abstract class BaseOperation {
                 v = this[keys[i]].map(ki => ki.toJsonableObject());
             }
             else if (typeof this[keys[i]] !== 'undefined' &&
-                (keys[i] !== 'rebase_functions' &&
-                    keys[i] !== '_type')) {
+                keys[i] !== '_type') {
                 v = this[keys[i]];
             }
             else {
@@ -126,11 +124,11 @@ export abstract class BaseOperation {
             return this;
         }
 
-        for (let i = 0; i < ((this.rebase_functions !== null)
-            ? this.rebase_functions.length
+        for (let i = 0; i < ((this.constructor['rebase_functions'] !== null)
+            ? this.constructor['rebase_functions'].length
             : 0); i++) {
-            if (_other._type[1] === this.rebase_functions[i][0]) {
-                let r = this.rebase_functions[i][1].call(
+            if (_other._type[1] === this.constructor['rebase_functions'][i][0]) {
+                let r = this.constructor['rebase_functions'][i][1].call(
                     this,
                     _other,
                     conflictless);
@@ -140,11 +138,11 @@ export abstract class BaseOperation {
             }
         }
 
-        for (let i = 0; i < ((_other.rebase_functions !== null)
-            ? _other.rebase_functions.length
+        for (let i = 0; i < ((_other.constructor['rebase_functions'] !== null)
+            ? _other.constructor['rebase_functions'].length
             : 0); i++) {
-            if (this._type[1] === _other.rebase_functions[i][0]) {
-                let r = _other.rebase_functions[i][1].call(
+            if (this._type[1] === _other.constructor['rebase_functions'][i][0]) {
+                let r = _other.constructor['rebase_functions'][i][1].call(
                     _other,
                     this,
                     conflictless);
@@ -167,7 +165,6 @@ export abstract class BaseOperation {
 
 export class NO_OP extends BaseOperation {
 
-    public rebase_functions = [];
     public _type = ['values', 'NO_OP'];
 
     constructor() {
@@ -196,8 +193,8 @@ export class NO_OP extends BaseOperation {
 export class SET extends BaseOperation {
 
     public _type = ['values', 'SET'];
-    public rebase_functions = [
-        ['SET', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['SET', function (_other, conflictless) {
             let other = _other as SET;
             if (deepEqual(this.new_value, other.new_value)) {
                 return [new NO_OP(), new NO_OP()];
@@ -210,7 +207,7 @@ export class SET extends BaseOperation {
             return null;
         }],
 
-        ['MATH', (_other, conflictless) => {
+        ['MATH', function (_other, conflictless) {
             let other = _other as MATH;
 
             try {
@@ -266,8 +263,8 @@ export class SET extends BaseOperation {
 export class MATH extends BaseOperation {
     public _type = ['values', 'MATH'];
 
-    public rebase_functions = [
-        ['MATH', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['MATH', function (_other, conflictless) {
             let other = _other as MATH;
             if (this.operator === other.operator) {
                 if (this.operator !== 'rot' ||
@@ -458,7 +455,6 @@ function rebase_array(base, ops) {
 export class LIST extends BaseOperation {
     public _type = ['meta', 'LIST'];
     public ops: Array<BaseOperation>;
-    public rebase_functions = [];
 
     constructor(ops) {
         super();

@@ -3,8 +3,8 @@ import { BaseOperation, LIST, NO_OP, SET, MATH, cmp } from './base';
 
 export class SPLICE extends BaseOperation {
     public _type = ['sequences', 'SPLICE'];
-    public rebase_functions = [
-        ['SPLICE', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['SPLICE', function (_other, conflictless) {
             if (_other instanceof SPLICE) {
                 let other = _other as SPLICE;
 
@@ -86,7 +86,7 @@ export class SPLICE extends BaseOperation {
             }
         }],
 
-        ['MOVE', (_other, conflictless) => {
+        ['MOVE', function (_other, conflictless) {
             if (_other instanceof MOVE) {
                 let other = _other as MOVE;
                 if (this.pos + this.old_value.length < other.pos) {
@@ -108,7 +108,7 @@ export class SPLICE extends BaseOperation {
             }
         }],
 
-        ['APPLY', (_other, conflictless) => {
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 // other is after the spliced range
@@ -155,7 +155,7 @@ export class SPLICE extends BaseOperation {
             return null;
         }],
 
-        ['MAP', (_other, conflictless) => {
+        ['MAP', function (_other, conflictless) {
             if (_other instanceof MAP) {
                 let other = _other as MAP;
 
@@ -298,8 +298,8 @@ export class DEL extends SPLICE {
 
 export class MOVE extends BaseOperation {
     public _type = ['sequences', 'MOVE'];
-    public rebase_functions = [
-        ['MOVE', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['MOVE', function (_other, conflictless) {
             if (_other instanceof MOVE) {
                 let other = _other as MOVE;
                 if (this.pos + this.count >= other.pos && this.pos < other.pos +
@@ -314,7 +314,7 @@ export class MOVE extends BaseOperation {
             return null;
         }],
 
-        ['APPLY', (_other, conflictless) => {
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 return [
@@ -325,7 +325,7 @@ export class MOVE extends BaseOperation {
             return null;
         }],
 
-        ['MAP', (_other, conflictless) => {
+        ['MAP', function (_other, conflictless) {
             return [this, _other];
         }]
     ];
@@ -413,8 +413,8 @@ export class MOVE extends BaseOperation {
 
 export class APPLY extends BaseOperation {
     public _type = ['sequences', 'APPLY'];
-    public rebase_functions = [
-        ['APPLY', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['APPLY', function (_other, conflictless) {
             if (_other instanceof APPLY) {
                 let other = _other as APPLY;
                 if (other.pos != this.pos) {
@@ -435,7 +435,7 @@ export class APPLY extends BaseOperation {
             }
         }],
 
-        ['MAP', (_other, conflictless) => {
+        ['MAP', function (_other, conflictless) {
             if (_other instanceof MAP) {
                 let other = _other as MAP;
                 const opa = this.op.rebase(other.op, conflictless);
@@ -544,8 +544,8 @@ export class APPLY extends BaseOperation {
 
 export class MAP extends BaseOperation {
     public _type = ['sequences', 'MAP'];
-    public rebase_functions = [
-        ['MAP', (_other, conflictless) => {
+    public static rebase_functions = [
+        ['MAP', function (_other, conflictless) {
             if (_other instanceof MAP) {
                 let other = _other as MAP;
                 const opa = this.op.rebase(other.op, conflictless);

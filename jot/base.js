@@ -61,8 +61,7 @@ var BaseOperation = (function () {
                 v = this[keys[i]].inspect(depth - 1);
             }
             else if (typeof this[keys[i]] !== 'undefined' &&
-                (keys[i] !== '_type' &&
-                    keys[i] !== 'rebase_functions')) {
+                keys[i] !== '_type') {
                 v = util.format("%j", this[keys[i]]);
             }
             else {
@@ -85,8 +84,7 @@ var BaseOperation = (function () {
                 v = this[keys[i]].map(function (ki) { return ki.toJsonableObject(); });
             }
             else if (typeof this[keys[i]] !== 'undefined' &&
-                (keys[i] !== 'rebase_functions' &&
-                    keys[i] !== '_type')) {
+                keys[i] !== '_type') {
                 v = this[keys[i]];
             }
             else {
@@ -107,21 +105,21 @@ var BaseOperation = (function () {
         if (_other._type[1] === 'NO_OP') {
             return this;
         }
-        for (var i = 0; i < ((this.rebase_functions !== null)
-            ? this.rebase_functions.length
+        for (var i = 0; i < ((this.constructor['rebase_functions'] !== null)
+            ? this.constructor['rebase_functions'].length
             : 0); i++) {
-            if (_other._type[1] === this.rebase_functions[i][0]) {
-                var r = this.rebase_functions[i][1].call(this, _other, conflictless);
+            if (_other._type[1] === this.constructor['rebase_functions'][i][0]) {
+                var r = this.constructor['rebase_functions'][i][1].call(this, _other, conflictless);
                 if (r !== null && r[0] !== null) {
                     return r[0];
                 }
             }
         }
-        for (var i = 0; i < ((_other.rebase_functions !== null)
-            ? _other.rebase_functions.length
+        for (var i = 0; i < ((_other.constructor['rebase_functions'] !== null)
+            ? _other.constructor['rebase_functions'].length
             : 0); i++) {
-            if (this._type[1] === _other.rebase_functions[i][0]) {
-                var r = _other.rebase_functions[i][1].call(_other, this, conflictless);
+            if (this._type[1] === _other.constructor['rebase_functions'][i][0]) {
+                var r = _other.constructor['rebase_functions'][i][1].call(_other, this, conflictless);
                 if (r !== null && r[1] !== null) {
                     return r[1];
                 }
@@ -129,6 +127,7 @@ var BaseOperation = (function () {
         }
         return null;
     };
+    BaseOperation.rebase_functions = [];
     return BaseOperation;
 }());
 exports.BaseOperation = BaseOperation;
@@ -136,7 +135,6 @@ var NO_OP = (function (_super) {
     __extends(NO_OP, _super);
     function NO_OP() {
         _super.call(this);
-        this.rebase_functions = [];
         this._type = ['values', 'NO_OP'];
         Object.freeze(this);
     }
@@ -158,39 +156,9 @@ exports.NO_OP = NO_OP;
 var SET = (function (_super) {
     __extends(SET, _super);
     function SET(old_value, new_value) {
-        var _this = this;
         if (new_value === void 0) { new_value = undefined; }
         _super.call(this);
         this._type = ['values', 'SET'];
-        this.rebase_functions = [
-            ['SET', function (_other, conflictless) {
-                    var other = _other;
-                    if (deepEqual(_this.new_value, other.new_value)) {
-                        return [new NO_OP(), new NO_OP()];
-                    }
-                    if (conflictless && cmp(_this.new_value, other.new_value) < 0) {
-                        return [new NO_OP(), new SET(_this.new_value, other.new_value)];
-                    }
-                    return null;
-                }],
-            ['MATH', function (_other, conflictless) {
-                    var other = _other;
-                    try {
-                        return [new SET(other.apply(_this.old_value), other.apply(_this.new_value)),
-                            other
-                        ];
-                    }
-                    catch (e) {
-                        if (conflictless) {
-                            return [
-                                new SET(other.apply(_this.old_value), _this.new_value),
-                                new NO_OP()
-                            ];
-                        }
-                    }
-                    return null;
-                }]
-        ];
         this.old_value = old_value;
         this.new_value = new_value;
         Object.freeze(this);
@@ -211,35 +179,43 @@ var SET = (function (_super) {
         return new SET(this.old_value, other.apply(this.new_value))
             .simplify();
     };
+    SET.rebase_functions = [
+        ['SET', function (_other, conflictless) {
+                var other = _other;
+                if (deepEqual(this.new_value, other.new_value)) {
+                    return [new NO_OP(), new NO_OP()];
+                }
+                if (conflictless && cmp(this.new_value, other.new_value) < 0) {
+                    return [new NO_OP(), new SET(this.new_value, other.new_value)];
+                }
+                return null;
+            }],
+        ['MATH', function (_other, conflictless) {
+                var other = _other;
+                try {
+                    return [new SET(other.apply(this.old_value), other.apply(this.new_value)),
+                        other
+                    ];
+                }
+                catch (e) {
+                    if (conflictless) {
+                        return [
+                            new SET(other.apply(this.old_value), this.new_value),
+                            new NO_OP()
+                        ];
+                    }
+                }
+                return null;
+            }]
+    ];
     return SET;
 }(BaseOperation));
 exports.SET = SET;
 var MATH = (function (_super) {
     __extends(MATH, _super);
     function MATH(operator, operand) {
-        var _this = this;
         _super.call(this);
         this._type = ['values', 'MATH'];
-        this.rebase_functions = [
-            ['MATH', function (_other, conflictless) {
-                    var other = _other;
-                    if (_this.operator === other.operator) {
-                        if (_this.operator !== 'rot' ||
-                            _this.operand[1] !== other.operand[1]) {
-                            return [_this, _other];
-                        }
-                    }
-                    if (conflictless) {
-                        if (cmp([_this.operator, _this.operand], [other.operator, other.operand]) < 0) {
-                            return [
-                                _this,
-                                new LIST([_this.invert(), _other, _this])
-                            ];
-                        }
-                    }
-                    return null;
-                }]
-        ];
         this.operator = operator;
         this.operand = operand;
         Object.freeze(this);
@@ -328,6 +304,26 @@ var MATH = (function (_super) {
         }
         return null;
     };
+    MATH.rebase_functions = [
+        ['MATH', function (_other, conflictless) {
+                var other = _other;
+                if (this.operator === other.operator) {
+                    if (this.operator !== 'rot' ||
+                        this.operand[1] !== other.operand[1]) {
+                        return [this, _other];
+                    }
+                }
+                if (conflictless) {
+                    if (cmp([this.operator, this.operand], [other.operator, other.operand]) < 0) {
+                        return [
+                            this,
+                            new LIST([this.invert(), _other, this])
+                        ];
+                    }
+                }
+                return null;
+            }]
+    ];
     return MATH;
 }(BaseOperation));
 exports.MATH = MATH;
@@ -374,7 +370,6 @@ var LIST = (function (_super) {
     function LIST(ops) {
         _super.call(this);
         this._type = ['meta', 'LIST'];
-        this.rebase_functions = [];
         if (ops === null) {
             throw 'Invalid argument';
         }
