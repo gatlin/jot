@@ -518,6 +518,6 @@ function rebase(_base, _ops, conflictless) {
     if (ops.length === 1) {
         return ops[0];
     }
-    return new LIST(ops).simplify();
+    return new LIST(ops);
 }
 exports.rebase = rebase;

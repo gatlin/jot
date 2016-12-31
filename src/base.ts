@@ -624,5 +624,5 @@ export function rebase(_base, _ops, conflictless) {
         return ops[0];
     }
 
-    return new LIST(ops).simplify();
+    return new LIST(ops);
 }
