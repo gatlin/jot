@@ -1,9 +1,13 @@
 JSON Operational Transformation (JOT)
 =====================================
 
-By Joshua Tauberer <http://razor.occams.info>.
+Originally by Joshua Tauberer <http://razor.occams.info>.
 
 August 2013.
+
+Conversion to TypeScript and bug fixes by Gatlin Johnson <gatlin@niltag.net>.
+
+December 2016.
 
 License: GPL v3 <http://choosealicense.com/licenses/gpl-v3/>
 
@@ -25,30 +29,30 @@ Introduction
 
 Here's an example of what this is all about. Say you start with:
 
-	{
-		"key1": "Hello world!",
-		"key2": 10
-	}
+    {
+        "key1": "Hello world!",
+        "key2": 10
+    }
 
 Then user A makes the following changes:
 
-	{
-		"title": "Hello world!",
-		"count": 10
-	}
+    {
+        "title": "Hello world!",
+        "count": 10
+    }
 
 and *simultanesouly* user B makes the following changes (to the original):
 
-	{
-		"key1": "My Program",
-		"key2": 20
-	}
+    {
+        "key1": "My Program",
+        "key2": 20
+    }
 
 How do you merge changes? In operational transformation, changes are represented
 structurally:
 
-	A = [("rename" : "key1" => "title"), ("rename" : "key2" => "count")]
-	B = [("set" : "key1" => "My Program"), ("set" : "key2" => 20)]
+    A = [("rename" : "key1" => "title"), ("rename" : "key2" => "count")]
+    B = [("set" : "key1" => "My Program"), ("set" : "key2" => 20)]
 
 If you were to apply these changes in sequence, you would have a problem.
 By the time you get to B's changes, the keys "key1" and "key2" are no
@@ -57,94 +61,104 @@ longer there!
 What you need is git's "rebase" that revises B given the simultaneous
 edits in A. Here's what you get after "rebasing" B against A:
 
-	B = [("set" : "title" => "My Program"), ("set" : "count" => 20)]
+    B = [("set" : "title" => "My Program"), ("set" : "count" => 20)]
 
 Now you *can* apply A and B sequentially.
 
 Installation
 ------------
 
-The code is written for the node.js platform.
+The code is written for the node.js platform. It is written in TypeScript and
+uses Gulp for its build process.
 
 Before running anything, you'll need to install node, and then jot's dependencies:
 
-	# change to this directory
-	npm install
+    # change to this directory
+    npm install
+
+You will also want to make sure you have the
+[gulp-cli](https://www.npmjs.com/package/gulp-cli) package installed in your
+path.
+
+While the JavaScript files in `jot/` are already built, if you wish to build
+them again run
+
+    gulp
 
 To build the library for browsers, do the above, and then run:
 
-	npm install -g browserify
-	browserify jot/index.js > jot_browser.js
+    gulp bundle
 
-Then use the library in your HTML page:
+This will create a file, `jot_browser.js`. Then use the library in your HTML
+page:
 
-	<html>
-		<body>
-			<script src="jot_browser.js"></script>
-			<script>
-				// see the example below, but skip the 'require' line
-			</script>
-		</body>
-	</html>
+    <html>
+        <body>
+            <script src="jot_browser.js"></script>
+            <script>
+                // see the example below, but skip the 'require' line
+            </script>
+        </body>
+    </html>
 
 Example
 -------
 
 Here's example code that follows the example in the introduction:
 
-	/* load libraries */
-	var jot = require("./jot"); // omit this line when in a browser, 'jot' is defined globally
+    /* load libraries */
+    var jot = require("./jot"); // omit this line when in a browser, 'jot' is defined globally
 
-	/* The Base Document */
+    /* The Base Document */
 
-	var doc = {
-		key1: "Hello World!",
-		key2: 10,
-	};
+    var doc = {
+        key1: "Hello World!",
+        key2: 10,
+    };
 
-	/* User 1 makes changes to the document's keys so
-	 * that the document becomes:
-	 *
-	 * { title: 'Hello World!', count: 10 }
-	 *
-	 */
+    /* User 1 makes changes to the document's keys so
+     * that the document becomes:
+     *
+     * { title: 'Hello World!', count: 10 }
+     *
+     */
 
-	var user1 = new jot.LIST([
-		new jot.REN("key1", "title"),
-		new jot.REN("key2", "count")
-	]);
+    var user1 = new jot.LIST([
+        new jot.REN("key1", "title"),
+        new jot.REN("key2", "count")
+    ]);
 
-	/* User 2 makes changes to the document's values so
-	 * that the document becomes:
-	 *
-	 * { key1: 'My Program', key2: 20 }
-	 *
-	 */
+    /* User 2 makes changes to the document's values so
+     * that the document becomes:
+     *
+     * { key1: 'My Program', key2: 20 }
+     *
+     */
 
-	var user2 = new jot.LIST([
-		new jot.OBJECT_APPLY("key1", new jot.SET("Hello World!", "My Program")),
-		new jot.OBJECT_APPLY("key2", new jot.MATH('add', 10))
-	]);
+    var user2 = new jot.LIST([
+        new jot.OBJECT_APPLY("key1", new jot.SET("Hello World!", "My Program")),
+        new jot.OBJECT_APPLY("key2", new jot.MATH('add', 10))
+    ]);
 
-	/* You can't do this! */
+    /* You can't do this! */
 
-	doc = user1.compose(user2).apply(doc);
+    doc = user1.compose(user2).apply(doc);
 
-	/* You must rebase user2's operations before composing them. */
+    /* You must rebase user2's operations before composing them. */
 
-	user2 = user2.rebase(user1);
+    user2 = user2.rebase(user1);
 
-	doc = user1.compose(user2).apply(doc);
+    doc = user1.compose(user2).apply(doc);
 
-	/* The document now looks like this:
-	 *
-	 * { title: 'My Program', count: 20 }
-	 *
-	 */
+    /* The document now looks like this:
+     *
+     * { title: 'My Program', count: 20 }
+     *
+     */
 
 To run:
 
-	node example.js
+    node example.js
 
 Note how the output applies both users' changes logically, even though the
 second user's changes specified "key1" and "key2", neither of which exist
@@ -222,7 +236,7 @@ the edits to be squashed in a predictable way.
 
 Real Time Collaboration
 -----------------------
-  
+
 You could put these pieces together into a real time collaboration server, but that
 involves more complicated handling of conflicts and synchronization, which is out
 of scope for this project.
@@ -232,5 +246,5 @@ Notes
 
 Thanks to @konklone for some inspiration and the first pull request.
 
-The Substance Operator library is very similar to this library. https://github.com/substance/operator
-
+The Substance Operator library is very similar to this
+library. https://github.com/substance/operator 
