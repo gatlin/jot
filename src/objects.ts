@@ -316,7 +316,7 @@ export class APPLY extends BaseOperation {
                 }
             }
 
-            return [this, _other];
+            return null;
         }]
     ];
 

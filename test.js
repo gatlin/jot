@@ -3,6 +3,7 @@ let objs = require('./jot/objects');
 let values = require('./jot/values');
 let deepEqual = require('deep-equal');
 let assert = require('assert');
+let seqs = require('./jot/sequences');
 
 let doc = {
     key1: 'Hello World!',
@@ -49,3 +50,14 @@ let cons = jot.LIST;
 let shouldBeNull = new objs.APPLY('key', new values.SET('x', 'y')).rebase(
     new objs.APPLY('key', new values.SET('x', 'z')));
 console.log('should be not ok', shouldBeNull);
+
+let seq1 = new seqs.MOVE(0, 1, 3).apply("123");
+console.log('seq1 test', seq1 == 231);
+console.log(seq1);
+
+let m1 = new values.MATH('rot', [1, 3]).rebase(
+    new values.MATH('rot', [5, 3]));
+let m2 = new values.MATH('rot', [1, 3]);
+console.log('m1', m1);
+console.log('m2', m2);
+console.log('MATH', deepEqual(m1, m2));

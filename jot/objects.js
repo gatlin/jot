@@ -319,7 +319,7 @@ var APPLY = (function (_super) {
                         ];
                     }
                 }
-                return [this, _other];
+                return null;
             }]
     ];
     return APPLY;

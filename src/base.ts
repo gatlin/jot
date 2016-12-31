@@ -269,7 +269,7 @@ export class MATH extends BaseOperation {
             if (this.operator === other.operator) {
                 if (this.operator !== 'rot' ||
                     this.operand[1] !== other.operand[1]) {
-                    return [this, _other];
+                    return [this, other];
                 }
             }
 
@@ -278,7 +278,7 @@ export class MATH extends BaseOperation {
                     [other.operator, other.operand]) < 0) {
                     return [
                         this,
-                        new LIST([this.invert(), _other, this])
+                        new LIST([this.invert(), other, this])
                     ];
                 }
             }

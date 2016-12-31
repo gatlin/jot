@@ -69,61 +69,60 @@ var SPLICE = (function (_super) {
     };
     SPLICE.rebase_functions = [
         ['SPLICE', function (_other, conflictless) {
-                if (_other instanceof SPLICE) {
-                    var other = _other;
-                    if (deepEqual(this, other)) {
-                        return [new base_1.NO_OP(), new base_1.NO_OP()];
-                    }
-                    // Two insertions at the same location.
-                    if (this.pos == other.pos && this.old_value.length == 0 &&
-                        other.old_value.length == 0) {
-                        if (conflictless && base_1.cmp(this.new_value, other.new_value)
-                            < 0) {
-                            return [this, new exports.SPLICE(other.pos +
-                                    this.new_value.length, other.old_value, other.new_value)];
-                        }
-                        return null;
-                    }
-                    else if (this.pos == other.pos && this.old_value.length ==
-                        other.old_value.length) {
-                        if (conflictless && base_1.cmp(this.new_value, other.new_value) <
-                            0) {
-                            return [
-                                new base_1.NO_OP(),
-                                new SPLICE(other.pos, this.new_value, other.new_value)
-                            ];
-                        }
-                        return null;
-                    }
-                    else if (this.pos + this.old_value.length <= other.pos)
-                        return [
-                            this,
-                            new exports.SPLICE(other.pos + (this.new_value.length -
-                                this.old_value.length), other.old_value, other.new_value)];
-                    else if (conflictless
-                        && ((this.pos < other.pos) || (this.pos == other.pos &&
-                            this.old_value.length >
-                                other.old_value.length))
-                        && ((this.pos + this.old_value.length > other.pos +
-                            other.old_value.length)
-                            || ((this.pos + this.old_value.length == other.pos +
-                                other.old_value.length) && this.pos < other.pos))) {
-                        return [
-                            new SPLICE(this.pos, concat3(this.old_value.slice(0, other.pos - this.pos), other.new_value, this.old_value.slice(other.pos +
-                                other.old_value.length -
-                                this.pos)), this.new_value),
-                            // other gets clobbered
-                            new base_1.NO_OP(),
-                        ];
-                    }
-                    else if (conflictless && this.pos < other.pos) {
-                        return [
-                            new SPLICE(this.pos, this.old_value.slice(0, other.pos - this.pos), this.new_value),
-                            new SPLICE(this.pos + this.new_value.length, other.old_value.slice(this.pos +
-                                this.old_value.length - other.pos), other.new_value)
-                        ];
-                    }
+                var other = _other;
+                if (deepEqual(this, other)) {
+                    return [new base_1.NO_OP(), new base_1.NO_OP()];
                 }
+                // Two insertions at the same location.
+                if (this.pos == other.pos && this.old_value.length == 0 &&
+                    other.old_value.length == 0) {
+                    if (conflictless && base_1.cmp(this.new_value, other.new_value)
+                        < 0) {
+                        return [this, new exports.SPLICE(other.pos +
+                                this.new_value.length, other.old_value, other.new_value)];
+                    }
+                    return null;
+                }
+                else if (this.pos == other.pos && this.old_value.length ==
+                    other.old_value.length) {
+                    if (conflictless && base_1.cmp(this.new_value, other.new_value) <
+                        0) {
+                        return [
+                            new base_1.NO_OP(),
+                            new SPLICE(other.pos, this.new_value, other.new_value)
+                        ];
+                    }
+                    return null;
+                }
+                else if (this.pos + this.old_value.length <= other.pos)
+                    return [
+                        this,
+                        new exports.SPLICE(other.pos + (this.new_value.length -
+                            this.old_value.length), other.old_value, other.new_value)];
+                else if (conflictless
+                    && ((this.pos < other.pos) || (this.pos == other.pos &&
+                        this.old_value.length >
+                            other.old_value.length))
+                    && ((this.pos + this.old_value.length > other.pos +
+                        other.old_value.length)
+                        || ((this.pos + this.old_value.length == other.pos +
+                            other.old_value.length) && this.pos < other.pos))) {
+                    return [
+                        new SPLICE(this.pos, concat3(this.old_value.slice(0, other.pos - this.pos), other.new_value, this.old_value.slice(other.pos +
+                            other.old_value.length -
+                            this.pos)), this.new_value),
+                        // other gets clobbered
+                        new base_1.NO_OP(),
+                    ];
+                }
+                else if (conflictless && this.pos < other.pos) {
+                    return [
+                        new SPLICE(this.pos, this.old_value.slice(0, other.pos - this.pos), this.new_value),
+                        new SPLICE(this.pos + this.new_value.length, other.old_value.slice(this.pos +
+                            this.old_value.length - other.pos), other.new_value)
+                    ];
+                }
+                return null;
             }],
         ['MOVE', function (_other, conflictless) {
                 if (_other instanceof MOVE) {
@@ -236,13 +235,16 @@ var MOVE = (function (_super) {
         Object.freeze(this);
     }
     MOVE.prototype.apply = function (document) {
-        if (this.pos < this.new_pos) {
-            return concat3(document.slice(0, this.pos), document.slice(this.pos + this.count, this.pos), document.slice(this.pos, this.pos + this.count) +
-                document.slice(this.new_pos));
-        }
-        else {
-            return concat4(document.slice(0, this.new_pos), document.slice(this.pos, this.pos + this.count), document.slice(this.new_pos, this.pos), document.slice(this.pos + this.count));
-        }
+        /* Applies the operation to a document. Returns a new sequence that is
+           the same type as document but with the subrange moved. */
+        if (this.pos < this.new_pos)
+            return concat3(document.slice(0, this.pos), document.slice(this.pos
+                + this.count, this.new_pos), document.slice(this.pos, this.pos +
+                this.count)
+                + document.slice(this.new_pos));
+        else
+            return concat4(document.slice(0, this.new_pos), document.slice(this.pos, this.pos + this.count), document.slice(this.new_pos, this.pos), document.slice(this.pos +
+                this.count));
     };
     MOVE.prototype.simplify = function () {
         if (this.pos === this.new_pos) {
@@ -251,12 +253,10 @@ var MOVE = (function (_super) {
         return this;
     };
     MOVE.prototype.invert = function () {
-        if (this.new_pos > this.pos) {
-            return new MOVE(this.new_pos, this.count, this.pos);
-        }
-        else {
+        if (this.new_pos > this.pos)
+            return new MOVE(this.new_pos - this.count, this.count, this.pos);
+        else
             return new MOVE(this.new_pos, this.count, this.pos + this.count);
-        }
     };
     MOVE.prototype.compose = function (_other) {
         if (_other instanceof base_1.NO_OP) {
@@ -368,21 +368,20 @@ var APPLY = (function (_super) {
     };
     APPLY.rebase_functions = [
         ['APPLY', function (_other, conflictless) {
-                if (_other instanceof APPLY) {
-                    var other = _other;
-                    if (other.pos != this.pos) {
-                        return [this, other];
-                    }
-                    // If they are at the same location, then rebase the sub-operations.
-                    var opa = this.op.rebase(other.op, conflictless);
-                    var opb = other.op.rebase(this.op, conflictless);
-                    if (opa && opb) {
-                        return [
-                            (opa instanceof base_1.NO_OP) ? new base_1.NO_OP() : new exports.APPLY(this.pos, opa),
-                            (opb instanceof base_1.NO_OP) ? new base_1.NO_OP() : new exports.APPLY(other.pos, opb)
-                        ];
-                    }
+                var other = _other;
+                if (other.pos != this.pos) {
+                    return [this, other];
                 }
+                // If they are at the same location, then rebase the sub-operations.
+                var opa = this.op.rebase(other.op, conflictless);
+                var opb = other.op.rebase(this.op, conflictless);
+                if (opa && opb) {
+                    return [
+                        (opa instanceof base_1.NO_OP) ? new base_1.NO_OP() : new exports.APPLY(this.pos, opa),
+                        (opb instanceof base_1.NO_OP) ? new base_1.NO_OP() : new exports.APPLY(other.pos, opb)
+                    ];
+                }
+                return null;
             }],
         ['MAP', function (_other, conflictless) {
                 if (_other instanceof MAP) {
@@ -470,17 +469,16 @@ var MAP = (function (_super) {
     };
     MAP.rebase_functions = [
         ['MAP', function (_other, conflictless) {
-                if (_other instanceof MAP) {
-                    var other = _other;
-                    var opa = this.op.rebase(other.op, conflictless);
-                    var opb = other.op.rebase(this.op, conflictless);
-                    if (opa && opb) {
-                        return [
-                            (opa instanceof base_1.NO_OP) ? new base_1.NO_OP() : new MAP(opa),
-                            (opb instanceof base_1.NO_OP) ? new base_1.NO_OP() : new MAP(opb)
-                        ];
-                    }
+                var other = _other;
+                var opa = this.op.rebase(other.op, conflictless);
+                var opb = other.op.rebase(this.op, conflictless);
+                if (opa && opb) {
+                    return [
+                        (opa instanceof base_1.NO_OP) ? new base_1.NO_OP() : new MAP(opa),
+                        (opb instanceof base_1.NO_OP) ? new base_1.NO_OP() : new MAP(opb)
+                    ];
                 }
+                return null;
             }]
     ];
     return MAP;
@@ -490,6 +488,91 @@ exports.MAP = MAP;
 above here are class definitions
 below here are helper functions
 ***/
+function from_diff(old_value, new_value, mode) {
+    // Do a diff, which results in an array of operations of the form
+    //  (op_type, op_data)
+    // where
+    //  op_type ==  0 => text same on both sides
+    //  op_type == -1 => text deleted (op_data is deleted text)
+    //  op_type == +1 => text inserted (op_data is inserted text)
+    // If mode is undefined or 'chars', the diff is performed over
+    // characters. Mode can also be 'words' or 'lines'.
+    var diff_match_patch = require('googlediff');
+    var jot = require('./index.js');
+    var dmp = new diff_match_patch();
+    /////////////////////////////////////////////////////////////
+    // adapted from diff_match_patch.prototype.diff_linesToChars_
+    function diff_tokensToChars_(text1, text2, split_regex) {
+        var lineArray = [];
+        var lineHash = {};
+        lineArray[0] = '';
+        function munge(text) {
+            var chars = '';
+            var lineStart = 0;
+            var lineEnd = -1;
+            var lineArrayLength = lineArray.length;
+            while (lineEnd < text.length - 1) {
+                split_regex.lastIndex = lineStart;
+                var m = split_regex.exec(text);
+                if (m)
+                    lineEnd = m.index;
+                else
+                    lineEnd = text.length - 1;
+                var line = text.substring(lineStart, lineEnd + 1);
+                lineStart = lineEnd + 1;
+                if (lineHash.hasOwnProperty ? lineHash.hasOwnProperty(line) :
+                    (lineHash[line] !== undefined)) {
+                    chars += String.fromCharCode(lineHash[line]);
+                }
+                else {
+                    chars += String.fromCharCode(lineArrayLength);
+                    lineHash[line] = lineArrayLength;
+                    lineArray[lineArrayLength++] = line;
+                }
+            }
+            return chars;
+        }
+        var chars1 = munge(text1);
+        var chars2 = munge(text2);
+        return { chars1: chars1, chars2: chars2, lineArray: lineArray };
+    }
+    /////////////////////////////////////////////////////////////
+    // handle words or lines mode
+    var token_state = null;
+    if (mode == "words")
+        token_state = diff_tokensToChars_(old_value, new_value, /[\W]/g);
+    if (mode == "lines")
+        token_state = diff_tokensToChars_(old_value, new_value, /\n/g);
+    var t1 = old_value;
+    var t2 = new_value;
+    if (token_state) {
+        t1 = token_state.chars1;
+        t2 = token_state.chars2;
+    }
+    // perform the diff
+    var d = dmp.diff_main(t1, t2);
+    // handle words or lines mode
+    if (token_state)
+        dmp.diff_charsToLines_(d, token_state.lineArray);
+    dmp.diff_cleanupSemantic(d);
+    // turn the output into an array of DEL and INS operations
+    var ret = [];
+    var pos = 0;
+    for (var i = 0; i < d.length; i++) {
+        if (d[i][0] == 0) {
+            pos += d[i][1].length;
+        }
+        else if (d[i][0] == -1) {
+            ret.push(new exports.DEL(pos, d[i][1]));
+        }
+        else if (d[i][0] == 1) {
+            ret.push(new exports.INS(pos, d[i][1]));
+            pos += d[i][1].length;
+        }
+    }
+    return new base_1.LIST(ret);
+}
+exports.from_diff = from_diff;
 function elem(seq, pos) {
     if (typeof seq === 'string') {
         return seq.charAt(pos);
