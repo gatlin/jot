@@ -276,11 +276,6 @@ var APPLY = (function (_super) {
         return _this;
     }
     APPLY.prototype.apply = function (document) {
-        /*
-        const d = shallow_clone(document);
-        d[this.key] = this.op.apply(d[this.key]);
-        return d;
-        */
         var d = {};
         for (var k in document) {
             d[k] = document[k];

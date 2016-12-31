@@ -106,7 +106,7 @@ function diff_strings(a, b, options) {
     })
         .filter(function (item) { return item != null; });
     // Merge consecutive INS/DELs into SPLICES.
-    var op = new meta.LIST(ops).simplify();
+    var op = new meta.LIST(ops);
     // If the change is a single operation that replaces the whole content
     // of the string, use a SET operation rather than a SPLICE operation.
     if (op instanceof sequences.SPLICE && op.old_value == a && op.new_value ==
@@ -150,49 +150,35 @@ function diff_arrays(a, b, options) {
         var hunks = [];
         var a_index = 0;
         var b_index = 0;
-        generic_diff(ai, bi, function (ai, bi) {
-            return _diff(a[ai], b[bi], options).pct <= level;
-        }).forEach(function (change) {
+        generic_diff(ai, bi, function (ai, bi) { return diff(a[ai], b[bi], options).pct <= level; }).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
-                if (a_index + change.items.length > ai.length) {
+                if (a_index + change.items.length > ai.length)
                     throw "out of range";
-                }
-                if (b_index + change.items.length > bi.length) {
+                if (b_index + change.items.length > bi.length)
                     throw "out of range";
-                }
-                hunks.push({
-                    type: 'equal', ai: ai.slice(a_index, a_index +
-                        change.items.length),
-                    bi: bi.slice(b_index, b_index +
-                        change.items.length)
-                });
+                hunks.push({ type: 'equal', ai: ai.slice(a_index, a_index + change.items.length), bi: bi.slice(b_index, b_index + change.items.length) });
                 a_index += change.items.length;
                 b_index += change.items.length;
             }
             else {
-                if (hunks.length == 0 ||
-                    hunks[hunks.length - 1].type == 'equal') {
+                if (hunks.length == 0 || hunks[hunks.length - 1].type == 'equal')
                     hunks.push({ type: 'unequal', ai: [], bi: [] });
-                }
                 if (change.added) {
                     // Added.
-                    hunks[hunks.length - 1].bi = hunks[hunks.length -
-                        1].bi.concat(change.items);
+                    hunks[hunks.length - 1].bi = hunks[hunks.length - 1].bi.concat(change.items);
                     b_index += change.items.length;
                 }
                 else if (change.removed) {
                     // Removed.
-                    hunks[hunks.length - 1].ai = hunks[hunks.length -
-                        1].ai.concat(change.items);
+                    hunks[hunks.length - 1].ai = hunks[hunks.length - 1].ai.concat(change.items);
                     a_index += change.items.length;
                 }
             }
         });
         // Process each hunk.
         hunks.forEach(function (hunk) {
-            //console.log(level, hunk.type, hunk.ai.map(function(i) { return
-            //a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
+            //console.log(level, hunk.type, hunk.ai.map(function(i) { return a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
             if (level < 1 && hunk.ai.length > 0 && hunk.bi.length > 0
                 && (level > 0 || hunk.type == "unequal")) {
                 // Recurse at a less strict comparison level to
@@ -223,14 +209,7 @@ function diff_arrays(a, b, options) {
                     var d = _diff(a[hunk.ai[i]], b[hunk.bi[i]], options);
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
-                        var ap = void 0;
-                        if (typeof hunk.bi[i] === 'string') {
-                            ap = new objects.APPLY(hunk.bi[i], d.op);
-                        }
-                        if (typeof hunk.bi[i] === 'number') {
-                            ap = new sequences.APPLY(hunk.bi[i], d.op);
-                        }
-                        ops.push(ap);
+                        ops.push(new sequences.APPLY(hunk.bi[i], d.op));
                     }
                     // Increment counters.
                     total_content += d.size;

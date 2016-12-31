@@ -130,7 +130,7 @@ function diff_strings(a, b, options): Diff {
         .filter(item => item != null);
 
     // Merge consecutive INS/DELs into SPLICES.
-    let op = new meta.LIST(ops).simplify();
+    let op = new meta.LIST(ops);
 
     // If the change is a single operation that replaces the whole content
     // of the string, use a SET operation rather than a SPLICE operation.
@@ -150,8 +150,7 @@ function diff_strings(a, b, options): Diff {
         size: total_content
     };
 }
-
-function diff_arrays(a, b, options): Diff {
+function diff_arrays(a, b, options) {
     // Use the 'generic-diff' package to compare two arrays,
     // but using a custom equality function. This gives us
     // a relation between the elements in the arrays. Then
@@ -159,17 +158,17 @@ function diff_arrays(a, b, options): Diff {
     // elements that are lined up (and INS/DEL operations
     // for elements that are added/removed).
 
-    let generic_diff = require("generic-diff");
+    var generic_diff = require("generic-diff");
 
     // We'll run generic_diff over an array of indices
     // into a and b, rather than on the elements themselves.
-    let ai = a.map((item, i) => i);
-    let bi = b.map((item, i) => i);
+    var ai = a.map(function (item, i) { return i });
+    var bi = b.map(function (item, i) { return i });
 
-    let ops = [];
-    let total_content = 0;
-    let changed_content = 0;
-    let pos = 0;
+    var ops = [];
+    var total_content = 0;
+    var changed_content = 0;
+    var pos = 0;
 
     function do_diff(ai, bi, level) {
         // Run generic-diff using a custom equality function that
@@ -183,40 +182,25 @@ function diff_arrays(a, b, options): Diff {
         var b_index = 0;
         generic_diff(
             ai, bi,
-            (ai, bi) => {
-                return _diff(a[ai], b[bi], options).pct <= level;
-            }
-        ).forEach(change => {
+            function (ai, bi) { return diff(a[ai], b[bi], options).pct <= level; }
+        ).forEach(function (change) {
             if (!change.removed && !change.added) {
                 // Same.
-                if (a_index + change.items.length > ai.length) {
-                    throw "out of range";
-                }
-                if (b_index + change.items.length > bi.length) {
-                    throw "out of range";
-                }
-                hunks.push({
-                    type: 'equal', ai: ai.slice(a_index, a_index +
-                        change.items.length),
-                    bi: bi.slice(b_index, b_index +
-                        change.items.length)
-                })
+                if (a_index + change.items.length > ai.length) throw "out of range";
+                if (b_index + change.items.length > bi.length) throw "out of range";
+                hunks.push({ type: 'equal', ai: ai.slice(a_index, a_index + change.items.length), bi: bi.slice(b_index, b_index + change.items.length) })
                 a_index += change.items.length;
                 b_index += change.items.length;
             } else {
-                if (hunks.length == 0 ||
-                    hunks[hunks.length - 1].type == 'equal') {
+                if (hunks.length == 0 || hunks[hunks.length - 1].type == 'equal')
                     hunks.push({ type: 'unequal', ai: [], bi: [] })
-                }
                 if (change.added) {
                     // Added.
-                    hunks[hunks.length - 1].bi = hunks[hunks.length -
-                        1].bi.concat(change.items);
+                    hunks[hunks.length - 1].bi = hunks[hunks.length - 1].bi.concat(change.items);
                     b_index += change.items.length;
                 } else if (change.removed) {
                     // Removed.
-                    hunks[hunks.length - 1].ai = hunks[hunks.length -
-                        1].ai.concat(change.items);
+                    hunks[hunks.length - 1].ai = hunks[hunks.length - 1].ai.concat(change.items);
                     a_index += change.items.length;
                 }
             }
@@ -224,8 +208,7 @@ function diff_arrays(a, b, options): Diff {
 
         // Process each hunk.
         hunks.forEach(function (hunk) {
-            //console.log(level, hunk.type, hunk.ai.map(function(i) { return
-            //a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
+            //console.log(level, hunk.type, hunk.ai.map(function(i) { return a[i]; }), hunk.bi.map(function(i) { return b[i]; }));
 
             if (level < 1 && hunk.ai.length > 0 && hunk.bi.length > 0
                 && (level > 0 || hunk.type == "unequal")) {
@@ -242,7 +225,7 @@ function diff_arrays(a, b, options): Diff {
             }
 
             if (hunk.type == "unequal") {
-                let op = new sequences.SPLICE(
+                var op = new sequences.SPLICE(
                     pos,
                     hunk.ai.map(function (i) { return a[i]; }),
                     hunk.bi.map(function (i) { return b[i]; }));
@@ -250,7 +233,7 @@ function diff_arrays(a, b, options): Diff {
                 //console.log(op);
 
                 // Increment counters.
-                let dd = (JSON.stringify(op.old_value) +
+                var dd = (JSON.stringify(op.old_value) +
                     JSON.stringify(op.new_value)).length / 2;
                 total_content += dd;
                 changed_content += dd;
@@ -266,15 +249,7 @@ function diff_arrays(a, b, options): Diff {
 
                     // Add an operation.
                     if (!(d.op instanceof values.NO_OP)) {
-                        let ap;
-                        if (typeof hunk.bi[i] === 'string') {
-                            ap = new objects.APPLY(hunk.bi[i], d.op);
-                        }
-
-                        if (typeof hunk.bi[i] === 'number') {
-                            ap = new sequences.APPLY(hunk.bi[i], d.op);
-                        }
-                        ops.push(ap);
+                        ops.push(new sequences.APPLY(hunk.bi[i], d.op));
                     }
 
                     // Increment counters.
