@@ -14,6 +14,9 @@ var SPLICE = (function (_super) {
         if (pos === null || old_value === null || new_value === null) {
             throw 'Invalid argument';
         }
+        if (!(_this instanceof SPLICE)) {
+            return new SPLICE(pos, old_value, new_value);
+        }
         _this.pos = pos;
         _this.old_value = old_value;
         _this.new_value = new_value;
@@ -209,7 +212,11 @@ exports.SPLICE = SPLICE;
 var INS = (function (_super) {
     __extends(INS, _super);
     function INS(pos, value) {
-        return _super.call(this, pos, value.slice(0, 0), value) || this;
+        var _this = _super.call(this, pos, value.slice(0, 0), value) || this;
+        if (!(_this instanceof INS)) {
+            return new INS(pos, value);
+        }
+        return _this;
     }
     return INS;
 }(SPLICE));
@@ -217,7 +224,11 @@ exports.INS = INS;
 var DEL = (function (_super) {
     __extends(DEL, _super);
     function DEL(pos, old_value) {
-        return _super.call(this, pos, old_value, old_value.slice(0, 0)) || this;
+        var _this = _super.call(this, pos, old_value, old_value.slice(0, 0)) || this;
+        if (!(_this instanceof DEL)) {
+            return new DEL(pos, old_value);
+        }
+        return _this;
     }
     return DEL;
 }(SPLICE));
@@ -230,6 +241,9 @@ var MOVE = (function (_super) {
         if (pos === null || count === null || count === 0 ||
             new_pos === null) {
             throw 'Invalid Argument';
+        }
+        if (!(_this instanceof MOVE)) {
+            return new MOVE(pos, count, new_pos);
         }
         _this.pos = pos;
         _this.count = count;
@@ -323,6 +337,9 @@ var APPLY = (function (_super) {
         _this._type = ['sequences', 'APPLY'];
         if (pos === null || op === null) {
             throw 'Invalid Argument';
+        }
+        if (!(_this instanceof APPLY)) {
+            return new APPLY(pos, op);
         }
         _this.pos = pos;
         _this.op = op;
@@ -421,6 +438,9 @@ var MAP = (function (_super) {
         _this._type = ['sequences', 'MAP'];
         if (op === null) {
             throw 'Invalid argument';
+        }
+        if (!(_this instanceof MAP)) {
+            return new MAP(op);
         }
         _this.op = op;
         Object.freeze(_this);

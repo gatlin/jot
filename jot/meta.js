@@ -2,3 +2,4 @@
 "use strict";
 var base_1 = require("./base");
 exports.LIST = base_1.LIST;
+exports.rebase = base_1.rebase;

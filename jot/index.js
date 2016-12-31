@@ -81,3 +81,13 @@ function deserialize(op_json) {
     return opFromJsonableObject(JSON.parse(op_json));
 }
 exports.deserialize = deserialize;
+function APPLY(pos_or_key, other) {
+    if (typeof pos_or_key === 'number') {
+        return new sequences.APPLY(pos_or_key, other);
+    }
+    if (typeof pos_or_key === 'string') {
+        return new objects.APPLY(pos_or_key, other);
+    }
+    throw 'Invalid argument';
+}
+exports.APPLY = APPLY;

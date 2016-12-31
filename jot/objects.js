@@ -18,6 +18,9 @@ var PUT = (function (_super) {
     function PUT(key, value) {
         var _this = _super.call(this) || this;
         _this._type = ['objects', 'PUT'];
+        if (!(_this instanceof PUT)) {
+            return new PUT(key, value);
+        }
         _this.key = key;
         _this.value = value;
         Object.freeze(_this);
@@ -94,6 +97,9 @@ var REM = (function (_super) {
         if (old_value === void 0) { old_value = undefined; }
         var _this = _super.call(this) || this;
         _this._type = ['objects', 'REM'];
+        if (!(_this instanceof REM)) {
+            return new REM(key, old_value);
+        }
         _this.key = key;
         _this.old_value = old_value;
         Object.freeze(_this);
@@ -169,6 +175,9 @@ var REN = (function (_super) {
     function REN(old_key, new_key) {
         var _this = _super.call(this) || this;
         _this._type = ['objects', 'REN'];
+        if (!(_this instanceof REN)) {
+            return new REN(old_key, new_key);
+        }
         if (old_key === null || new_key === null) {
             throw 'Invalid arguments';
         }
@@ -255,6 +264,9 @@ var APPLY = (function (_super) {
     function APPLY(key, op) {
         var _this = _super.call(this) || this;
         _this._type = ['objects', 'APPLY'];
+        if (!(_this instanceof APPLY)) {
+            return new APPLY(key, op);
+        }
         if (key === null || op === null) {
             throw 'Invalid arguments';
         }

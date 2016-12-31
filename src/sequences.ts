@@ -194,6 +194,10 @@ export class SPLICE extends BaseOperation {
             throw 'Invalid argument';
         }
 
+        if (!(this instanceof SPLICE)) {
+            return new SPLICE(pos, old_value, new_value);
+        }
+
         this.pos = pos;
         this.old_value = old_value;
         this.new_value = new_value;
@@ -286,12 +290,18 @@ export class SPLICE extends BaseOperation {
 export class INS extends SPLICE {
     constructor(pos, value) {
         super(pos, value.slice(0, 0), value);
+        if (!(this instanceof INS)) {
+            return new INS(pos, value);
+        }
     }
 }
 
 export class DEL extends SPLICE {
     constructor(pos, old_value) {
         super(pos, old_value, old_value.slice(0, 0));
+        if (!(this instanceof DEL)) {
+            return new DEL(pos, old_value);
+        }
     }
 }
 
@@ -340,6 +350,9 @@ export class MOVE extends BaseOperation {
             throw 'Invalid Argument';
         }
 
+        if (!(this instanceof MOVE)) {
+            return new MOVE(pos, count, new_pos);
+        }
         this.pos = pos;
         this.count = count;
         this.new_pos = new_pos;
@@ -468,6 +481,10 @@ export class APPLY extends BaseOperation {
             throw 'Invalid Argument';
         }
 
+        if (!(this instanceof APPLY)) {
+            return new APPLY(pos, op);
+        }
+
         this.pos = pos;
         this.op = op;
 
@@ -560,6 +577,10 @@ export class MAP extends BaseOperation {
         super();
         if (op === null) {
             throw 'Invalid argument';
+        }
+
+        if (!(this instanceof MAP)) {
+            return new MAP(op);
         }
 
         this.op = op;

@@ -43,6 +43,9 @@ export class PUT extends BaseOperation {
 
     constructor(key, value) {
         super();
+        if (!(this instanceof PUT)) {
+            return new PUT(key, value);
+        }
         this.key = key;
         this.value = value;
         Object.freeze(this);
@@ -145,6 +148,9 @@ export class REM extends BaseOperation {
 
     constructor(key, old_value = undefined) {
         super();
+        if (!(this instanceof REM)) {
+            return new REM(key, old_value);
+        }
         this.key = key;
         this.old_value = old_value;
         Object.freeze(this);
@@ -242,6 +248,9 @@ export class REN extends BaseOperation {
 
     constructor(old_key, new_key) {
         super();
+        if (!(this instanceof REN)) {
+            return new REN(old_key, new_key);
+        }
         if (old_key === null || new_key === null) {
             throw 'Invalid arguments';
         }
@@ -322,6 +331,9 @@ export class APPLY extends BaseOperation {
 
     constructor(key, op) {
         super();
+        if (!(this instanceof APPLY)) {
+            return new APPLY(key, op);
+        }
         if (key === null || op === null) {
             throw 'Invalid arguments';
         }

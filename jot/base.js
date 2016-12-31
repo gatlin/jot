@@ -136,6 +136,9 @@ var NO_OP = (function (_super) {
     function NO_OP() {
         var _this = _super.call(this) || this;
         _this._type = ['values', 'NO_OP'];
+        if (!(_this instanceof NO_OP)) {
+            return new NO_OP();
+        }
         Object.freeze(_this);
         return _this;
     }
@@ -160,6 +163,9 @@ var SET = (function (_super) {
         if (new_value === void 0) { new_value = undefined; }
         var _this = _super.call(this) || this;
         _this._type = ['values', 'SET'];
+        if (!(_this instanceof SET)) {
+            return new SET(old_value, new_value);
+        }
         _this.old_value = old_value;
         _this.new_value = new_value;
         Object.freeze(_this);
@@ -218,6 +224,9 @@ var MATH = (function (_super) {
     function MATH(operator, operand) {
         var _this = _super.call(this) || this;
         _this._type = ['values', 'MATH'];
+        if (!(_this instanceof MATH)) {
+            return new MATH(operator, operand);
+        }
         _this.operator = operator;
         _this.operand = operand;
         Object.freeze(_this);
@@ -330,42 +339,48 @@ MATH.rebase_functions = [
         }]
 ];
 exports.MATH = MATH;
-function rebase_array(base, ops) {
+function rebase_array(base, ops, conflictless) {
     if (ops.length === 0 || base.length === 0) {
         return ops;
     }
-    if (base instanceof Array) {
+    if (base.length === 1) {
+        if (base[0] instanceof NO_OP) {
+            return ops;
+        }
+        if (ops.length === 1) {
+            var op = ops[0].rebase(base[0], conflictless);
+            if (!op) {
+                return null;
+            }
+            if (op instanceof NO_OP) {
+                return [];
+            }
+            return [op];
+        }
+        var op1 = ops.slice(0, 1);
+        var op2 = ops.slice(1);
+        var r1 = rebase_array(base, op1, conflictless);
+        if (r1 === null) {
+            return null;
+        }
+        var r2 = rebase_array(op1, base, conflictless);
+        if (r2 === null) {
+            return null;
+        }
+        var r3 = rebase_array(r2, op2, conflictless);
+        if (r3 === null) {
+            return null;
+        }
+        return r1.concat(r3);
+    }
+    else {
         for (var i = 0; i < base.length; i++) {
-            ops = rebase_array(base[i], ops);
-            if (!ops) {
+            ops = rebase_array([base[i]], ops, conflictless);
+            if (ops === null) {
                 return null;
             }
         }
         return ops;
-    }
-    else {
-        if (ops.length === 1) {
-            var op = ops[0].rebase(base);
-            if (!op) {
-                return null; // conflict
-            }
-            return [op];
-        }
-        var op1 = ops[0];
-        var op2 = ops.splice(1);
-        var r1 = op1.rebase(base);
-        if (!r1) {
-            return null; // rebase failed
-        }
-        var r2 = base.rebase(op1);
-        if (!r2) {
-            return null; // rebase failed
-        }
-        var r3 = rebase_array(r2, op2);
-        if (!r3) {
-            return null; // rebase failed
-        }
-        return [r1].concat(r3);
     }
 }
 var LIST = (function (_super) {
@@ -375,6 +390,9 @@ var LIST = (function (_super) {
         _this._type = ['meta', 'LIST'];
         if (ops === null) {
             throw 'Invalid argument';
+        }
+        if (!(_this instanceof LIST)) {
+            return new LIST(ops);
         }
         if (!(ops instanceof Array)) {
             throw 'Invalid argument';
@@ -391,6 +409,9 @@ var LIST = (function (_super) {
     };
     LIST.prototype.simplify = function () {
         var new_ops = [];
+        if (this.ops.length === 0) {
+            return new NO_OP();
+        }
         for (var i = 0; i < this.ops.length; i++) {
             var op = this.ops[i];
             if (op instanceof NO_OP) {
@@ -430,6 +451,9 @@ var LIST = (function (_super) {
         if (new_ops.length === 0) {
             return new NO_OP();
         }
+        if (new_ops.length === 1) {
+            return new_ops[0];
+        }
         return new LIST(new_ops);
     };
     LIST.prototype.invert = function () {
@@ -441,7 +465,7 @@ var LIST = (function (_super) {
     };
     LIST.prototype.compose = function (_other) {
         if (this.ops.length === 0) {
-            return new LIST([_other]);
+            return _other;
         }
         if (_other instanceof NO_OP) {
             return this;
@@ -461,27 +485,39 @@ var LIST = (function (_super) {
         new_ops.push(_other);
         return new LIST(new_ops);
     };
-    LIST.prototype.rebase = function (_other) {
-        if (_other instanceof NO_OP) {
-            return this;
-        }
-        var base;
-        if (_other instanceof LIST) {
-            var other = _other;
-            base = other.ops;
-        }
-        else {
-            base = _other;
-        }
-        var ops = rebase_array(base, this.ops);
-        if (ops === null) {
-            return null;
-        }
-        if (ops.length === 0) {
-            return new NO_OP();
-        }
-        return new LIST(ops);
+    LIST.prototype.rebase = function (other, conflictless) {
+        return rebase(other, this, conflictless);
     };
     return LIST;
 }(BaseOperation));
 exports.LIST = LIST;
+function rebase(_base, _ops, conflictless) {
+    var base;
+    if (_base instanceof LIST) {
+        base = _base;
+        base = base.ops;
+    }
+    else {
+        base = [_base];
+    }
+    var ops;
+    if (_ops instanceof LIST) {
+        ops = _ops;
+        ops = ops.ops;
+    }
+    else {
+        ops = [_ops];
+    }
+    ops = rebase_array(base, ops, conflictless);
+    if (ops === null) {
+        return null;
+    }
+    if (ops.length === 0) {
+        return new NO_OP();
+    }
+    if (ops.length === 1) {
+        return ops[0];
+    }
+    return new LIST(ops).simplify();
+}
+exports.rebase = rebase;

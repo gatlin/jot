@@ -104,8 +104,8 @@ t.deepEqual(
 	new values.NO_OP())
 t.deepEqual(
 	new objs.PUT("key", "value2").rebase(
-		new objs.PUT("key", "value1"), true).toJsonableObject(),
-	new objs.APPLY("key", new values.SET("value1", "value2")).toJsonableObject())
+		new objs.PUT("key", "value1"), true),
+	new objs.APPLY("key", new values.SET("value1", "value2")))
 
 t.deepEqual(
 	new objs.REM("key", "value").rebase(

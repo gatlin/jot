@@ -135,3 +135,15 @@ export function opFromJsonableObject(obj) {
 export function deserialize(op_json) {
     return opFromJsonableObject(JSON.parse(op_json));
 }
+
+export function APPLY(pos_or_key, other): sequences.APPLY | objects.APPLY {
+    if (typeof pos_or_key === 'number') {
+        return new sequences.APPLY(pos_or_key, other);
+    }
+
+    if (typeof pos_or_key === 'string') {
+        return new objects.APPLY(pos_or_key, other);
+    }
+
+    throw 'Invalid argument';
+}

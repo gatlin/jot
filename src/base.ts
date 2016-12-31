@@ -169,6 +169,9 @@ export class NO_OP extends BaseOperation {
 
     constructor() {
         super();
+        if (!(this instanceof NO_OP)) {
+            return new NO_OP();
+        }
         Object.freeze(this);
     }
 
@@ -233,6 +236,9 @@ export class SET extends BaseOperation {
 
     constructor(old_value, new_value = undefined) {
         super();
+        if (!(this instanceof SET)) {
+            return new SET(old_value, new_value);
+        }
         this.old_value = old_value;
         this.new_value = new_value;
         Object.freeze(this);
@@ -291,6 +297,9 @@ export class MATH extends BaseOperation {
 
     constructor(operator, operand) {
         super();
+        if (!(this instanceof MATH)) {
+            return new MATH(operator, operand);
+        }
         this.operator = operator;
         this.operand = operand;
         Object.freeze(this);
@@ -406,51 +415,61 @@ export class MATH extends BaseOperation {
     }
 }
 
-function rebase_array(base, ops) {
+function rebase_array(base, ops, conflictless) {
+
     if (ops.length === 0 || base.length === 0) {
         return ops;
     }
 
-    if (base instanceof Array) {
-        for (let i = 0; i < base.length; i++) {
-            ops = rebase_array(base[i], ops);
-            if (!ops) {
+    if (base.length === 1) {
+        if (base[0] instanceof NO_OP) {
+            return ops;
+        }
+
+        if (ops.length === 1) {
+            let op = ops[0].rebase(base[0], conflictless);
+            if (!op) {
                 return null;
             }
-        }
-        return ops;
-    }
-
-    else {
-        if (ops.length === 1) {
-            let op = ops[0].rebase(base);
-            if (!op) {
-                return null; // conflict
+            if (op instanceof NO_OP) {
+                return [];
             }
             return [op];
         }
 
-        let op1 = ops[0];
-        let op2 = ops.splice(1);
+        let op1 = ops.slice(0, 1);
+        let op2 = ops.slice(1);
 
-        let r1 = op1.rebase(base);
-        if (!r1) {
-            return null; // rebase failed
+        let r1 = rebase_array(base, op1, conflictless);
+        if (r1 === null) {
+            return null;
         }
 
-        let r2 = base.rebase(op1);
-        if (!r2) {
-            return null; // rebase failed
+        let r2 = rebase_array(op1, base, conflictless);
+        if (r2 === null) {
+            return null;
         }
 
-        let r3 = rebase_array(r2, op2);
-        if (!r3) {
-            return null; // rebase failed
+        let r3 = rebase_array(r2, op2, conflictless);
+        if (r3 === null) {
+            return null;
         }
 
-        return [r1].concat(r3);
+        return r1.concat(r3);
+    }
+
+    else {
+        for (let i = 0; i < base.length; i++) {
+            ops = rebase_array([base[i]], ops, conflictless);
+            if (ops === null) {
+                return null;
+            }
+        }
+
+        return ops;
     }
 }
+
 
 export class LIST extends BaseOperation {
     public _type = ['meta', 'LIST'];
@@ -460,6 +479,10 @@ export class LIST extends BaseOperation {
         super();
         if (ops === null) {
             throw 'Invalid argument';
+        }
+
+        if (!(this instanceof LIST)) {
+            return new LIST(ops);
         }
         if (!(ops instanceof Array)) {
             throw 'Invalid argument';
@@ -479,6 +502,9 @@ export class LIST extends BaseOperation {
 
     public simplify(): BaseOperation {
         const new_ops = [];
+        if (this.ops.length === 0) {
+            return new NO_OP();
+        }
         for (let i = 0; i < this.ops.length; i++) {
             let op: BaseOperation = this.ops[i];
 
@@ -521,6 +547,10 @@ export class LIST extends BaseOperation {
             return new NO_OP();
         }
 
+        if (new_ops.length === 1) {
+            return new_ops[0];
+        }
+
         return new LIST(new_ops);
     }
 
@@ -534,7 +564,7 @@ export class LIST extends BaseOperation {
 
     public compose(_other: BaseOperation): BaseOperation {
         if (this.ops.length === 0) {
-            return new LIST([_other]);
+            return _other
         }
 
         if (_other instanceof NO_OP) {
@@ -559,28 +589,40 @@ export class LIST extends BaseOperation {
         return new LIST(new_ops);
     }
 
-    public rebase(_other: BaseOperation): BaseOperation {
-        if (_other instanceof NO_OP) {
-            return this;
-        }
-
-        let base;
-        if (_other instanceof LIST) {
-            let other = _other as LIST;
-            base = other.ops;
-        } else {
-            base = _other;
-        }
-
-        let ops = rebase_array(base, this.ops);
-        if (ops === null) {
-            return null;
-        }
-
-        if (ops.length === 0) {
-            return new NO_OP();
-        }
-
-        return new LIST(ops);
+    public rebase(other: BaseOperation, conflictless: boolean): BaseOperation {
+        return rebase(other, this, conflictless);
     }
+}
+
+export function rebase(_base, _ops, conflictless) {
+    let base;
+    if (_base instanceof LIST) {
+        base = _base as LIST;
+        base = base.ops;
+    } else {
+        base = [_base];
+    }
+
+    let ops;
+    if (_ops instanceof LIST) {
+        ops = _ops as LIST;
+        ops = ops.ops;
+    } else {
+        ops = [_ops];
+    }
+
+    ops = rebase_array(base, ops, conflictless);
+    if (ops === null) {
+        return null;
+    }
+
+    if (ops.length === 0) {
+        return new NO_OP();
+    }
+
+    if (ops.length === 1) {
+        return ops[0];
+    }
+
+    return new LIST(ops).simplify();
 }
