@@ -2,7 +2,7 @@ import * as deepEqual from 'deep-equal';
 import { BaseOperation, LIST, NO_OP, SET, MATH, cmp } from './base';
 
 export class SPLICE extends BaseOperation {
-    public _type = ['sequences', 'SPLICE'];
+    protected _type = ['sequences', 'SPLICE'];
     public static rebase_functions = [
         ['SPLICE', function (_other, conflictless) {
             let other = _other as SPLICE;
@@ -306,7 +306,7 @@ export class DEL extends SPLICE {
 }
 
 export class MOVE extends BaseOperation {
-    public _type = ['sequences', 'MOVE'];
+    protected _type = ['sequences', 'MOVE'];
     public static rebase_functions = [
         ['MOVE', function (_other, conflictless) {
             if (_other instanceof MOVE) {
@@ -421,7 +421,7 @@ export class MOVE extends BaseOperation {
 }
 
 export class APPLY extends BaseOperation {
-    public _type = ['sequences', 'APPLY'];
+    protected _type = ['sequences', 'APPLY'];
     public static rebase_functions = [
         ['APPLY', function (_other, conflictless) {
             let other = _other as APPLY;
@@ -554,7 +554,7 @@ export class APPLY extends BaseOperation {
 }
 
 export class MAP extends BaseOperation {
-    public _type = ['sequences', 'MAP'];
+    protected _type = ['sequences', 'MAP'];
     public static rebase_functions = [
         ['MAP', function (_other, conflictless) {
             let other = _other as MAP;

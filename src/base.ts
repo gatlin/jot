@@ -57,7 +57,7 @@ export function cmp(a, b) {
 export abstract class BaseOperation {
 
     public static rebase_functions: Array<RebaseFunction> = [];
-    public abstract _type: Array<string>;
+    protected abstract _type: Array<string>;
 
     public inspect(depth) {
         let repr = [];
@@ -164,7 +164,7 @@ export abstract class BaseOperation {
 
 export class NO_OP extends BaseOperation {
 
-    public _type = ['values', 'NO_OP'];
+    protected _type = ['values', 'NO_OP'];
 
     constructor() {
         super();
@@ -194,7 +194,7 @@ export class NO_OP extends BaseOperation {
 
 export class SET extends BaseOperation {
 
-    public _type = ['values', 'SET'];
+    protected _type = ['values', 'SET'];
     public static rebase_functions = [
         ['SET', function (_other, conflictless) {
             let other = _other as SET;
@@ -266,7 +266,7 @@ export class SET extends BaseOperation {
 }
 
 export class MATH extends BaseOperation {
-    public _type = ['values', 'MATH'];
+    protected _type = ['values', 'MATH'];
 
     public static rebase_functions = [
         ['MATH', function (_other, conflictless) {
@@ -471,7 +471,7 @@ function rebase_array(base, ops, conflictless) {
 
 
 export class LIST extends BaseOperation {
-    public _type = ['meta', 'LIST'];
+    protected _type = ['meta', 'LIST'];
     public ops: Array<BaseOperation>;
 
     constructor(ops) {
