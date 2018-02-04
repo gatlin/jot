@@ -27,7 +27,7 @@ framework here.
 Building and Testing
 ---
 
-The command `npm run build` will generate a director, `jot`, with JS files as
+The command `npm run build` will generate a directory, `jot`, with JS files as
 well as TypeScript definition files.
 
 The command `npm run bundle` will generate a file `jot_browser.js` that exports
