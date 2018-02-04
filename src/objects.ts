@@ -1,4 +1,4 @@
-import * as deepEqual from 'deep-equal';
+import deepEqual = require('deep-equal');
 import { BaseOperation, NO_OP, SET, MATH, cmp } from './base';
 
 function shallow_clone(document) {

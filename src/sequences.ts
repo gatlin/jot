@@ -1,4 +1,4 @@
-import * as deepEqual from 'deep-equal';
+import deepEqual = require('deep-equal');
 import { BaseOperation, LIST, NO_OP, SET, MATH, cmp } from './base';
 
 export class SPLICE extends BaseOperation {
@@ -154,7 +154,7 @@ export class SPLICE extends BaseOperation {
             return null;
         }],
 
-        ['MAP', function (_other, conflictless) {
+        ['MAP', function (_other, conflictless): any {
             if (_other instanceof MAP) {
                 let other = _other as MAP;
 

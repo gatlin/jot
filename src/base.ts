@@ -1,9 +1,9 @@
 /* Base functions */
 
 import * as util from 'util';
-import * as deepEqual from 'deep-equal';
+import deepEqual = require('deep-equal');
 
-type RebaseFunction = any; // kludge
+export type RebaseFunction = any; // kludge
 
 export function type_name(x) {
     if (typeof x === 'object') {
@@ -209,7 +209,7 @@ export class SET extends BaseOperation {
             return null;
         }],
 
-        ['MATH', function (_other, conflictless) {
+        ['MATH', function (_other, conflictless): any {
             let other = _other as MATH;
 
             try {

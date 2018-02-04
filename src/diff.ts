@@ -1,4 +1,4 @@
-import * as deepEqual from 'deep-equal';
+import deepEqual = require('deep-equal');
 
 import { BaseOperation } from './base';
 import * as values from './values';

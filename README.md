@@ -24,6 +24,17 @@ over numbers, strings, arrays, and objects) and inverts, composes, and
 rebases those operations (transformations). There is no UI or collaboration
 framework here.
 
+Building and Testing
+---
+
+The command `npm run build` will generate a director, `jot`, with JS files as
+well as TypeScript definition files.
+
+The command `npm run bundle` will generate a file `jot_browser.js` that exports
+the library on a global variable `jot`.
+
+And `npm run test` will run a grip of tests as expected.
+
 Introduction
 ------------
 
