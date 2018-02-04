@@ -16,7 +16,7 @@
     },
     "author": "Gatlin Johnson",
     "scripts": {
-        "clean": "rm -rf jot",
+        "clean": "rm -rf jot jot_browser.js",
         "build": "npm run clean && tsc",
         "bundle": "NODE_ENV=production webpack",
         "test": "tap tests/*.js"
